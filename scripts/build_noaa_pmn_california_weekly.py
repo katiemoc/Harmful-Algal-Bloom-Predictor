@@ -9,13 +9,14 @@ import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
+NOAA_PMN_DATA_DIR = ROOT / "notebooks" / "noaa_pmn" / "data"
 SOURCE_CANDIDATES = [
-    ROOT / "data_jin" / "noaa_pmn_all_data_2017_2026_weekly.csv",
-    ROOT / "data_jin" / "noaa_pmn_all_data_2001_2026.csv",
+    NOAA_PMN_DATA_DIR / "noaa_pmn_all_data_2017_2026_weekly.csv",
+    NOAA_PMN_DATA_DIR / "noaa_pmn_all_data_2001_2026.csv",
 ]
 CALHABMAP_GLOB = str(ROOT / "CalHABMAP Data" / "cleaned_hab_data" / "*_cleaned.csv")
-CALIFORNIA_WEEKLY_CSV = ROOT / "data_jin" / "noaa_pmn_california_weekly_site.csv"
-CALIFORNIA_MATCHED_WEEKLY_CSV = ROOT / "data_jin" / "noaa_pmn_california_matched_weekly_site.csv"
+CALIFORNIA_WEEKLY_CSV = NOAA_PMN_DATA_DIR / "noaa_pmn_california_weekly_site.csv"
+CALIFORNIA_MATCHED_WEEKLY_CSV = NOAA_PMN_DATA_DIR / "noaa_pmn_california_matched_weekly_site.csv"
 
 NUMERIC_COLUMNS = [
     "latitude",
@@ -37,7 +38,7 @@ def find_source_csv() -> Path:
     for path in SOURCE_CANDIDATES:
         if path.exists():
             return path
-    raise FileNotFoundError("Could not find a NOAA PMN source CSV in data_jin/.")
+    raise FileNotFoundError("Could not find a NOAA PMN source CSV in notebooks/noaa_pmn/data/.")
 
 
 def load_calhabmap_sites() -> pd.DataFrame:
