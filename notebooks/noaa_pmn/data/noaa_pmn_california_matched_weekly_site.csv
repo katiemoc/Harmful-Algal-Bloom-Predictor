@@ -1,0 +1,9 @@
+sample_site,week_start,latitude,longitude,observations,unique_species,unique_abundance_labels,median_count,max_count,median_water_temp,median_air_temp,median_salinity,median_ph,median_dissoxygen,median_secchidisk,median_windspeed,nearest_calhabmap_site,nearest_calhabmap_distance_km,matched_calhabmap_site
+CA - Santa Cruz wharf,2025-10-06,36.958676,-122.018278,12,12,1,,,16.0,18.0,35.0,,,,7.5,SantaCruzWharf_86b0_cc60_0457,0.136,SantaCruzWharf_86b0_cc60_0457
+CA - Santa Cruz wharf,2025-10-20,36.958676,-122.018278,27,27,1,,,15.0,14.0,35.0,,,,7.5,SantaCruzWharf_86b0_cc60_0457,0.136,SantaCruzWharf_86b0_cc60_0457
+CA - Santa Cruz wharf,2025-11-03,36.958676,-122.018278,46,23,1,,,15.0,15.0,34.0,,,,2.5,SantaCruzWharf_86b0_cc60_0457,0.136,SantaCruzWharf_86b0_cc60_0457
+CA - Santa Cruz wharf,2025-11-17,36.958676,-122.018278,16,8,1,,,13.0,13.0,34.0,,,,2.5,SantaCruzWharf_86b0_cc60_0457,0.136,SantaCruzWharf_86b0_cc60_0457
+CA - Santa Cruz wharf,2025-12-15,36.958676,-122.018278,17,17,1,,,14.0,14.0,34.0,,,,2.5,SantaCruzWharf_86b0_cc60_0457,0.136,SantaCruzWharf_86b0_cc60_0457
+CA - Sea Center,2025-03-24,34.41005,-119.68574,4,2,1,,,14.0,17.0,31.0,,,,,StearnsWharf_eff4_30b3_6677,0.238,StearnsWharf_eff4_30b3_6677
+CA - Wharf 2 Monterey CA,2023-03-06,36.603571,-121.889296,10,10,1,,,11.0,12.0,39.0,,0.0,,7.5,MontereyWharf_1e75_40db_c5ad,0.013,MontereyWharf_1e75_40db_c5ad
+CA - Wharf 2 Monterey CA,2023-03-20,36.603571,-121.889296,9,9,1,,,12.0,13.0,36.0,,0.0,,7.5,MontereyWharf_1e75_40db_c5ad,0.013,MontereyWharf_1e75_40db_c5ad
