@@ -1,0 +1,46 @@
+feature,importance
+cat__season_winter,0.13448651
+cat__season_spring,0.06990248
+num__sst_roll_14d,0.041731413
+num__air_temp_c,0.039389364
+num__sea_surface_temp_c,0.037084047
+num__year,0.03469452
+cat__station_Santa Cruz Wharf,0.03436704
+num__month,0.033474017
+num__silicate,0.029831287
+num__rolling_bloom_rate_52w,0.026920123
+cat__station_Stearns Wharf,0.026781501
+cat__season_fall,0.024749536
+num__station_id,0.023199752
+num__avg_chloro,0.022644928
+cat__station_Monterey Wharf,0.022039905
+num__latitude,0.019316442
+cat__station_Newport Beach Pier,0.019254344
+num__wave_height_m,0.018471735
+cat__station_Humboldt South Bay,0.018468855
+num__longitude,0.018308003
+num__temp_lag1,0.018306833
+num__avg_chloro_lag1,0.018185271
+num__silicate_nitrate_ratio,0.017050954
+num__warm_degree_days_14d,0.016566705
+num__avg_chloro_lag2,0.015926238
+num__dominant_period_s,0.01556114
+num__nitrate_lag1,0.015416958
+num__anom_roll_14d,0.015327845
+num__nitrate_lag2,0.014901238
+cat__station_Cal Poly Pier,0.0148912985
+num__silicate_lag2,0.014736819
+num__nitrate,0.014094812
+num__temp_lag2,0.0140461745
+num__wind_speed_mps,0.013904949
+num__mean_wave_dir_deg,0.013896426
+num__temp,0.013599162
+num__sst_roc_3d,0.011611382
+num__atm_pressure_hpa,0.011443112
+num__silicate_lag1,0.01116089
+num__above_avg,0.00871927
+cat__station_Humboldt,0.008390534
+cat__station_Santa Monica Pier,0.0039259046
+cat__season_summer,0.0032202236
+cat__station_Scripps Pier,0.0
+cat__station_Trinidad Pier,0.0
