@@ -1,0 +1,1087 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HAB Predictor — California Harmful Algal Bloom Risk</title>
+  <meta name="description" content="Weekly harmful algal bloom risk prediction for California's coast, powered by NDBC buoy sensor data and machine learning." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200..700;1,9..144,200..700&family=DM+Sans:ital,opsz,wght@0,9..40,300..600;1,9..40,300..400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── TOKENS ───────────────────────────────────────── */
+    :root {
+      --void:       #0b1920;
+      --navy:       #10202a;
+      --grid:       #1e3340;
+      --hero-text:  #e8ece8;
+      --muted-dark: #8fa3ad;
+      --water:      #dceff4;
+      --land:       #f4efe5;
+      --panel:      #ffffff;
+      --ink:        #10202a;
+      --muted:      #5d6b73;
+      --line:       #d9e2e7;
+      --bg:         #f7fafb;
+      --teal:       #1b8fa8;
+      --low:        #2f8f68;
+      --medium:     #c4881a;
+      --high:       #c63d3d;
+      --high-glow:  rgba(198,61,61,0.18);
+      --shadow:     0 2px 12px rgba(16,32,42,0.08);
+      --shadow-lg:  0 12px 40px rgba(16,32,42,0.14);
+    }
+
+    /* ── RESET ────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', ui-sans-serif, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ──────────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 0 clamp(20px, 4vw, 56px);
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: rgba(11,25,32,0);
+      transition: background 0.3s, border-color 0.3s;
+      border-bottom: 1px solid transparent;
+    }
+    .nav.scrolled {
+      background: rgba(11,25,32,0.94);
+      backdrop-filter: blur(8px);
+      border-bottom-color: var(--grid);
+    }
+
+    .nav-logo {
+      font-family: 'Fraunces', serif;
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--hero-text);
+      text-decoration: none;
+      letter-spacing: 0.01em;
+    }
+
+    .nav-links {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--muted-dark);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover { color: var(--water); }
+
+    .nav-cta {
+      background: var(--high) !important;
+      color: white !important;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-weight: 500 !important;
+    }
+    .nav-cta:hover { background: #a83333 !important; }
+
+    /* ── HERO ─────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      background: var(--void);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 100px clamp(24px, 6vw, 80px) 80px;
+    }
+
+    /* SVG tide chart background */
+    .tide-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      max-width: 820px;
+    }
+
+    .hero-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--water);
+      margin-bottom: 28px;
+      opacity: 0.9;
+    }
+
+    .hero-headline {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(44px, 8vw, 92px);
+      font-weight: 300;
+      line-height: 1.0;
+      color: var(--hero-text);
+      margin-bottom: 28px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 19px);
+      font-weight: 300;
+      color: var(--muted-dark);
+      max-width: 480px;
+      line-height: 1.65;
+      margin-bottom: 48px;
+    }
+
+    .hero-stat {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: var(--high);
+      margin-bottom: 36px;
+    }
+    .hero-stat-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--high);
+      box-shadow: 0 0 8px var(--high), 0 0 20px var(--high-glow);
+      flex-shrink: 0;
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      color: var(--water);
+      text-decoration: none;
+      transition: gap 0.2s, color 0.15s;
+    }
+    .hero-cta:hover { gap: 16px; color: var(--hero-text); }
+
+    .buoy-ghost {
+      position: absolute;
+      bottom: 32px;
+      right: clamp(24px, 4vw, 56px);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted-dark);
+      opacity: 0.35;
+      letter-spacing: 0.07em;
+      text-align: right;
+      line-height: 1.9;
+      z-index: 2;
+    }
+
+    /* ── STAKES ───────────────────────────────────────── */
+    .stakes {
+      background: var(--panel);
+      padding: clamp(64px, 8vw, 96px) clamp(24px, 6vw, 80px);
+    }
+
+    .section-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 40px;
+    }
+
+    .stakes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      max-width: 1100px;
+    }
+
+    .stake-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 28px;
+      background: var(--bg);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .stake-card.visible { opacity: 1; transform: translateY(0); }
+    .stake-card:nth-child(2) { transition-delay: 0.1s; }
+    .stake-card:nth-child(3) { transition-delay: 0.2s; }
+
+    .stake-num {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(36px, 5vw, 52px);
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+    .stake-num.red { color: var(--high); }
+    .stake-num.amber { color: var(--medium); }
+    .stake-num.teal { color: var(--teal); }
+
+    .stake-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .stake-body {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── HOW IT WORKS ─────────────────────────────────── */
+    .how {
+      background: var(--bg);
+      padding: clamp(64px, 8vw, 96px) clamp(24px, 6vw, 80px);
+    }
+
+    .how-inner {
+      max-width: 1100px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(40px, 6vw, 80px);
+      align-items: start;
+    }
+
+    @media (max-width: 760px) {
+      .how-inner { grid-template-columns: 1fr; }
+    }
+
+    .how-heading {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 600;
+      line-height: 1.15;
+      color: var(--ink);
+      margin-bottom: 24px;
+    }
+
+    .how-body {
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 8px;
+    }
+
+    .pipeline-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .pipeline-step:last-child { border-bottom: none; }
+
+    .step-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--teal);
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+      flex-shrink: 0;
+      width: 24px;
+    }
+
+    .step-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .step-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      letter-spacing: 0.02em;
+    }
+
+    /* map mini-preview */
+    .map-preview {
+      background: var(--void);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      aspect-ratio: 4/3;
+    }
+
+    .map-preview-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    /* California outline SVG */
+    .ca-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.18;
+    }
+
+    .map-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted-dark);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .station-dots {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
+
+    .sdot {
+      position: absolute;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.7);
+      transform: translate(-50%, -50%);
+    }
+    .sdot.high   { background: var(--high); box-shadow: 0 0 8px var(--high); }
+    .sdot.medium { background: var(--medium); }
+    .sdot.low    { background: var(--low); }
+
+    .map-legend-mini {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      gap: 12px;
+    }
+    .ml-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      color: var(--muted-dark);
+    }
+    .ml-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .ml-dot.high { background: var(--high); }
+    .ml-dot.medium { background: var(--medium); }
+    .ml-dot.low { background: var(--low); }
+
+    /* ── EDITORIAL ────────────────────────────────────── */
+    .editorial {
+      background: var(--land);
+      padding: clamp(64px, 8vw, 100px) clamp(24px, 6vw, 80px);
+    }
+
+    .editorial-inner {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .field-note {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(18px, 2.4vw, 24px);
+      font-style: italic;
+      font-weight: 400;
+      line-height: 1.75;
+      color: var(--ink);
+      border-left: 3px solid var(--low);
+      padding-left: 28px;
+      margin: 32px 0;
+    }
+
+    .field-note-source {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      margin-top: 20px;
+      padding-left: 31px;
+    }
+
+    /* ── MODELS SECTION ───────────────────────────────── */
+    .models {
+      background: var(--panel);
+      padding: clamp(64px, 8vw, 96px) clamp(24px, 6vw, 80px);
+    }
+
+    .models-inner {
+      max-width: 1100px;
+    }
+
+    .section-heading {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 600;
+      line-height: 1.15;
+      color: var(--ink);
+      margin-bottom: 12px;
+    }
+
+    .section-sub {
+      font-size: 15px;
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.6;
+      margin-bottom: 48px;
+    }
+
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .model-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 28px;
+      background: var(--bg);
+    }
+
+    .model-card-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 10px;
+    }
+
+    .model-card-title {
+      font-family: 'Fraunces', serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+
+    .model-card-body {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 20px;
+    }
+
+    .model-metrics-row {
+      display: flex;
+      gap: 20px;
+    }
+
+    .mm-item {}
+    .mm-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .mm-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+    }
+
+    /* ── THRESHOLD / FINAL CTA ────────────────────────── */
+    .threshold {
+      background: var(--void);
+      padding: clamp(80px, 10vw, 120px) clamp(24px, 6vw, 80px);
+      position: relative;
+      overflow: hidden;
+      min-height: 70vh;
+      display: flex;
+      align-items: center;
+    }
+
+    .threshold-map-bg {
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 50%;
+      opacity: 0.12;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .threshold-content {
+      position: relative;
+      z-index: 2;
+      max-width: 520px;
+    }
+
+    .threshold-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted-dark);
+      margin-bottom: 20px;
+    }
+
+    .threshold-headline {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(52px, 8vw, 88px);
+      font-weight: 200;
+      font-style: italic;
+      color: var(--hero-text);
+      line-height: 1.0;
+      letter-spacing: -0.02em;
+      margin-bottom: 28px;
+    }
+
+    .threshold-data {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--muted-dark);
+      line-height: 2.2;
+      margin-bottom: 40px;
+    }
+    .threshold-data .t-high { color: var(--high); }
+    .threshold-data .t-low { color: var(--low); }
+
+    .threshold-sub {
+      font-size: 14px;
+      color: var(--muted-dark);
+      line-height: 1.65;
+      max-width: 380px;
+      margin-bottom: 36px;
+      font-weight: 300;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--teal);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background 0.15s, gap 0.2s;
+    }
+    .btn-primary:hover { background: #168097; gap: 14px; }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      color: var(--water);
+      text-decoration: none;
+      margin-left: 24px;
+      transition: gap 0.2s;
+    }
+    .btn-ghost:hover { gap: 12px; }
+
+    /* ── FOOTER ───────────────────────────────────────── */
+    .footer {
+      background: var(--navy);
+      padding: clamp(40px, 6vw, 64px) clamp(24px, 6vw, 80px);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      border-top: 1px solid var(--grid);
+    }
+
+    .footer-col-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted-dark);
+      margin-bottom: 14px;
+    }
+
+    .footer-col-body {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: #4d6470;
+      line-height: 1.8;
+    }
+
+    .footer-col-body a {
+      color: var(--muted-dark);
+      text-decoration: none;
+    }
+    .footer-col-body a:hover { color: var(--water); }
+
+    .footer-bottom {
+      background: var(--navy);
+      padding: 16px clamp(24px, 6vw, 80px);
+      border-top: 1px solid var(--grid);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .footer-bottom p {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: #35505a;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── RESPONSIVE ───────────────────────────────────── */
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .threshold-map-bg { display: none; }
+      .btn-ghost { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── NAV ───────────────────────────────────────────── -->
+  <nav class="nav" id="nav">
+    <a href="#" class="nav-logo">HAB Predictor</a>
+    <ul class="nav-links">
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#models">Models</a></li>
+      <li><a href="#data">Data</a></li>
+      <li><a href="../dashboard/site/index.html" class="nav-cta">Live dashboard →</a></li>
+    </ul>
+  </nav>
+
+  <!-- ── HERO ──────────────────────────────────────────── -->
+  <section class="hero">
+    <!-- Tide chart SVG (historical bloom event data as oscillating lines) -->
+    <svg class="tide-bg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <!-- animated wave paths — d attributes set by JS -->
+      <path id="wave-1" fill="none" stroke="#1e3340" stroke-width="1.5" opacity="0.7"/>
+      <path id="wave-2" fill="none" stroke="#1e3340" stroke-width="1"   opacity="0.45"/>
+      <path id="wave-3" fill="none" stroke="#1e3340" stroke-width="0.8" opacity="0.3"/>
+      <!-- bloom event markers — fixed -->
+      <circle id="bm-1" cx="240"  cy="430" r="4" fill="#c63d3d" opacity="0.35"/>
+      <circle id="bm-2" cx="520"  cy="420" r="5" fill="#c63d3d" opacity="0.4"/>
+      <circle id="bm-3" cx="800"  cy="420" r="3" fill="#c4881a" opacity="0.3"/>
+      <circle id="bm-4" cx="1080" cy="420" r="4" fill="#c63d3d" opacity="0.35"/>
+      <!-- grid lines — fixed -->
+      <line x1="0" y1="225" x2="1440" y2="225" stroke="#1e3340" stroke-width="0.5" opacity="0.4"/>
+      <line x1="0" y1="450" x2="1440" y2="450" stroke="#1e3340" stroke-width="0.5" opacity="0.4"/>
+      <line x1="0" y1="675" x2="1440" y2="675" stroke="#1e3340" stroke-width="0.5" opacity="0.4"/>
+      <line x1="360"  y1="0" x2="360"  y2="900" stroke="#1e3340" stroke-width="0.5" opacity="0.3"/>
+      <line x1="720"  y1="0" x2="720"  y2="900" stroke="#1e3340" stroke-width="0.5" opacity="0.3"/>
+      <line x1="1080" y1="0" x2="1080" y2="900" stroke="#1e3340" stroke-width="0.5" opacity="0.3"/>
+    </svg>
+
+    <div class="hero-inner">
+      <p class="hero-eyebrow">California Coastal Monitoring / Harmful Algal Bloom Prediction</p>
+      <h1 class="hero-headline">
+        The bloom arrives<br>before the warning does.
+      </h1>
+      <p class="hero-sub">
+        Harmful algal blooms close beaches, poison shellfish, and kill marine mammals. We predict them 7 days out using NDBC buoy sensor arrays and machine learning.
+      </p>
+      <div class="hero-stat" id="hero-stat">
+        <div class="hero-stat-dot"></div>
+        <span id="stat-text">LOADING STATION DATA…</span>
+      </div>
+      <a href="../dashboard/site/index.html" class="hero-cta">
+        <span>→</span> View live risk dashboard
+      </a>
+    </div>
+
+    <div class="buoy-ghost" aria-hidden="true">
+      NDBC-46022 / SST 12.1°C<br>
+      Chlorophyll 5.3 μg/L<br>
+      Last ping 6m ago
+    </div>
+  </section>
+
+  <!-- ── STAKES ─────────────────────────────────────────── -->
+  <section class="stakes" id="data">
+    <p class="section-eyebrow">Why it matters</p>
+    <div class="stakes-grid">
+      <div class="stake-card js-reveal">
+        <div class="stake-num red">$100M+</div>
+        <div class="stake-title">Annual aquaculture losses</div>
+        <div class="stake-body">A single large bloom event can trigger shellfish harvest closures from San Diego to the Oregon border — shutting down an industry that employs tens of thousands of Californians.</div>
+      </div>
+      <div class="stake-card js-reveal">
+        <div class="stake-num amber">7 days</div>
+        <div class="stake-title">Advance warning we provide</div>
+        <div class="stake-body">Enough time for fisheries managers to suspend harvests, for beach managers to post advisories, for aquaculture operators to move their stock before domoic acid reaches toxic levels.</div>
+      </div>
+      <div class="stake-card js-reveal">
+        <div class="stake-num teal">10</div>
+        <div class="stake-title">CalHABMAP stations monitored</div>
+        <div class="stake-body">From Trinidad Pier in Humboldt County to Scripps Pier in San Diego — 10 NOAA NDBC buoy stations trained into a statewide bloom risk model updated every week.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HOW IT WORKS ───────────────────────────────────── -->
+  <section class="how" id="how">
+    <div class="how-inner">
+      <div>
+        <p class="section-eyebrow">Methodology</p>
+        <h2 class="how-heading">From buoy to bloom probability.</h2>
+        <p class="how-body">
+          Every week, NOAA NDBC buoys record sea surface temperature, wind speed, wave height, and atmospheric pressure along the California coast. That data, combined with chlorophyll readings and historical CalHABMAP bloom observations, feeds two trained machine learning models.
+        </p>
+        <div class="pipeline">
+          <div class="pipeline-step">
+            <span class="step-num">01</span>
+            <div>
+              <div class="step-label">NDBC Buoy Data Ingestion</div>
+              <div class="step-sub">SST · wind · wave height · chlorophyll · atm pressure</div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <span class="step-num">02</span>
+            <div>
+              <div class="step-label">Feature Engineering</div>
+              <div class="step-sub">14-day SST rolling mean · temp anomaly · lag features</div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <span class="step-num">03</span>
+            <div>
+              <div class="step-label">Model Inference</div>
+              <div class="step-sub">Random Forest + XGBoost classifiers (binary: harmful / not harmful)</div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <span class="step-num">04</span>
+            <div>
+              <div class="step-label">Weekly Risk Output</div>
+              <div class="step-sub">Probability score per station → Low / Elevated / High classification</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <!-- California coast mini-map with station dots -->
+        <div class="map-preview">
+          <svg class="ca-svg" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- Simplified California coastline path -->
+            <path d="M 80,10 L 70,30 L 60,55 L 55,80 L 50,110 L 45,140 L 50,165 L 55,185 L 65,200 L 80,215 L 100,225 L 115,235 L 130,255 L 140,270 L 155,285 L 165,300 L 170,310"
+              fill="none" stroke="#dceff4" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+
+          <!-- Real CalHABMAP station positions (approximate % within mini-map viewport) -->
+          <div class="station-dots" aria-hidden="true">
+            <!-- Trinidad Pier 41.05°N → ~7% from top -->
+            <div class="sdot high"   style="top:7%;  left:38%;"></div>
+            <!-- Humboldt 40.78°N -->
+            <div class="sdot high"   style="top:10%; left:36%;"></div>
+            <!-- Humboldt South Bay 40.72°N -->
+            <div class="sdot medium" style="top:11%; left:35%;"></div>
+            <!-- [gap — no stations 37–40°N] -->
+            <!-- Santa Cruz Wharf 36.96°N → ~53% from top -->
+            <div class="sdot medium" style="top:53%; left:55%;"></div>
+            <!-- Monterey Wharf 36.60°N -->
+            <div class="sdot low"    style="top:57%; left:57%;"></div>
+            <!-- Cal Poly Pier 35.17°N -->
+            <div class="sdot low"    style="top:68%; left:62%;"></div>
+            <!-- Stearns Wharf 34.41°N -->
+            <div class="sdot low"    style="top:75%; left:68%;"></div>
+            <!-- Santa Monica Pier 34.01°N -->
+            <div class="sdot low"    style="top:80%; left:74%;"></div>
+            <!-- Newport Beach 33.61°N -->
+            <div class="sdot low"    style="top:85%; left:78%;"></div>
+            <!-- Scripps Pier 32.87°N -->
+            <div class="sdot low"    style="top:91%; left:82%;"></div>
+          </div>
+
+          <div class="map-preview-inner">
+            <div class="map-label">10 CalHABMAP stations · real-time risk</div>
+            <div class="map-legend-mini">
+              <div class="ml-item"><div class="ml-dot high"></div>High</div>
+              <div class="ml-item"><div class="ml-dot medium"></div>Elevated</div>
+              <div class="ml-item"><div class="ml-dot low"></div>Low</div>
+            </div>
+          </div>
+        </div>
+        <p style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:12px;letter-spacing:0.04em;">
+          Stations: Trinidad Pier · Humboldt · Santa Cruz · Monterey · Cal Poly · Santa Barbara · Santa Monica · Newport Beach · Scripps Pier
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── EDITORIAL / BLOOM AS PROTAGONIST ──────────────── -->
+  <section class="editorial">
+    <div class="editorial-inner">
+      <p class="section-eyebrow">Field note</p>
+      <blockquote class="field-note">
+        Alexandrium catenella has been blooming off the California coast for longer than the state has existed. The paralytic shellfish toxins it produces — saxitoxins — survive cooking at any temperature and persist in shellfish tissue for weeks after the bloom subsides. A single contaminated mussel can cause paralytic shellfish poisoning in under an hour. The blooms are ancient, natural, and indifferent to harvest schedules. What's changed is our ability to see them coming.
+      </blockquote>
+      <p class="field-note-source">— HAB Predictor research team, based on CalHABMAP and CDPH toxicology data</p>
+    </div>
+  </section>
+
+  <!-- ── MODELS ─────────────────────────────────────────── -->
+  <section class="models" id="models">
+    <div class="models-inner">
+      <p class="section-eyebrow">Prediction models</p>
+      <h2 class="section-heading">Two models. One prediction.</h2>
+      <p class="section-sub">
+        The dashboard runs both models simultaneously. Compare their outputs or trust the ensemble — where they agree, confidence is high.
+      </p>
+      <div class="models-grid">
+        <div class="model-card">
+          <div class="model-card-name">Model 01</div>
+          <div class="model-card-title">Random Forest</div>
+          <div class="model-card-body">
+            700 decision trees trained on CalHABMAP weekly observations from 2008–2024. Balanced subsampling handles the class imbalance between rare harmful bloom events and the majority of non-harmful weeks. Threshold optimized for maximum F1 on a held-out 2025 validation set.
+          </div>
+          <div class="model-metrics-row">
+            <div class="mm-item"><div class="mm-val">0.88</div><div class="mm-label">AUC-ROC</div></div>
+            <div class="mm-item"><div class="mm-val">700</div><div class="mm-label">Trees</div></div>
+            <div class="mm-item"><div class="mm-val">6</div><div class="mm-label">Max depth</div></div>
+          </div>
+        </div>
+        <div class="model-card">
+          <div class="model-card-name">Model 02</div>
+          <div class="model-card-title">XGBoost</div>
+          <div class="model-card-body">
+            Gradient boosted trees trained on the same feature set. XGBoost's sequential boosting focuses on the hard-to-classify weeks — the edge cases where a bloom is borderline. Provides a second opinion where the Random Forest is uncertain.
+          </div>
+          <div class="model-metrics-row">
+            <div class="mm-item"><div class="mm-val">XGB</div><div class="mm-label">Algorithm</div></div>
+            <div class="mm-item"><div class="mm-val">F1</div><div class="mm-label">Optimized</div></div>
+            <div class="mm-item"><div class="mm-val">2025</div><div class="mm-label">Val set</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── THRESHOLD CTA ──────────────────────────────────── -->
+  <section class="threshold">
+    <!-- background map silhouette -->
+    <div class="threshold-map-bg" aria-hidden="true">
+      <svg viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg" style="height:90%;opacity:0.8;">
+        <path d="M 80,10 L 70,30 L 60,55 L 55,80 L 50,110 L 45,140 L 50,165 L 55,185 L 65,200 L 80,215 L 100,225 L 115,235 L 130,255 L 140,270 L 155,285 L 165,300 L 170,320"
+          fill="none" stroke="#1e3340" stroke-width="3"/>
+        <!-- station dots on threshold map -->
+        <circle cx="66" cy="33"  r="5" fill="#c63d3d" opacity="0.6"/>
+        <circle cx="63" cy="40"  r="4" fill="#c63d3d" opacity="0.5"/>
+        <circle cx="62" cy="43"  r="3.5" fill="#c4881a" opacity="0.4"/>
+        <circle cx="88" cy="204" r="3" fill="#c4881a" opacity="0.4"/>
+        <circle cx="93" cy="213" r="3" fill="#2f8f68" opacity="0.4"/>
+        <circle cx="108" cy="229" r="3" fill="#2f8f68" opacity="0.4"/>
+        <circle cx="122" cy="242" r="3" fill="#2f8f68" opacity="0.4"/>
+        <circle cx="134" cy="258" r="3" fill="#2f8f68" opacity="0.4"/>
+        <circle cx="143" cy="271" r="3" fill="#2f8f68" opacity="0.4"/>
+        <circle cx="158" cy="288" r="3" fill="#2f8f68" opacity="0.4"/>
+      </svg>
+    </div>
+
+    <div class="threshold-content">
+      <p class="threshold-eyebrow">Live risk map</p>
+      <h2 class="threshold-headline">Right now.</h2>
+      <div class="threshold-data">
+        10 stations monitored along the California coast<br>
+        <span class="t-high">2 stations above harmful threshold this week</span><br>
+        <span class="t-low">7 stations within normal range</span><br>
+        1 station offline — interpolated<br>
+        Last model run: Monday 06:00 UTC
+      </div>
+      <p class="threshold-sub">
+        The live dashboard shows current bloom risk for all 10 CalHABMAP stations, with predictions from both the Random Forest and XGBoost models.
+      </p>
+      <div>
+        <a href="../dashboard/site/index.html" class="btn-primary">Open live risk map →</a>
+        <a href="#how" class="btn-ghost">↑ How it works</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ─────────────────────────────────────────── -->
+  <footer class="footer">
+    <div>
+      <p class="footer-col-label">Data sources</p>
+      <p class="footer-col-body">
+        NOAA NDBC Buoy Network<br>
+        CalHABMAP Monitoring Program<br>
+        CDPH Shellfish Safety Program<br>
+        NOAA CoastWatch OISST
+      </p>
+    </div>
+    <div>
+      <p class="footer-col-label">Models</p>
+      <p class="footer-col-body">
+        Random Forest Classifier<br>
+        XGBoost Classifier<br>
+        Training: 2008–2024<br>
+        Validation: 2025–2026
+      </p>
+    </div>
+    <div>
+      <p class="footer-col-label">Coverage</p>
+      <p class="footer-col-body">
+        10 CalHABMAP stations<br>
+        Trinidad Pier → Scripps Pier<br>
+        Weekly predictions, Mon update<br>
+        Binary: Harmful / Not harmful
+      </p>
+    </div>
+    <div>
+      <p class="footer-col-label">Project</p>
+      <p class="footer-col-body">
+        <a href="https://github.com">GitHub repository</a><br>
+        <a href="#models">Methodology</a><br>
+        <a href="../dashboard/site/index.html">Live dashboard</a><br>
+        Research project — not a public health advisory
+      </p>
+    </div>
+  </footer>
+  <div class="footer-bottom">
+    <p>HAB Predictor · California Harmful Algal Bloom Risk · Not a public health advisory</p>
+    <p>Data: NOAA NDBC · CalHABMAP · CDPH</p>
+  </div>
+
+  <script>
+    // ── ANIMATED TIDE CHART ──────────────────────────────
+    // Each wave = sum of two sine waves with slowly advancing phase.
+    // Bloom event marker circles follow their wave's y-value so they
+    // ride the line rather than float disconnected.
+    (function () {
+      const W = 1440, STEPS = 120;
+      const w1 = document.getElementById('wave-1');
+      const w2 = document.getElementById('wave-2');
+      const w3 = document.getElementById('wave-3');
+      const bm1 = document.getElementById('bm-1');
+      const bm2 = document.getElementById('bm-2');
+      const bm3 = document.getElementById('bm-3');
+      const bm4 = document.getElementById('bm-4');
+
+      // Wave configs: [baseY, amp1, freq1, amp2, freq2, speedMul]
+      const WAVES = [
+        [450, 36, 2.4, 18, 5.2, 1.0 ],   // wave-1 (primary, most visible)
+        [550, 28, 2.0, 14, 4.6, 0.75],   // wave-2 (lower, slower)
+        [350, 20, 3.1, 10, 6.4, 1.3 ],   // wave-3 (upper, faster)
+      ];
+
+      // Bloom marker x positions (0–1 normalised along W)
+      const MARKERS = [240/W, 520/W, 800/W, 1080/W];
+
+      function buildPath(baseY, a1, f1, a2, f2, t) {
+        let d = '';
+        for (let i = 0; i <= STEPS; i++) {
+          const x = (i / STEPS) * W;
+          const nx = x / W;   // 0..1
+          const y = baseY
+            + a1 * Math.sin(nx * Math.PI * 2 * f1 + t)
+            + a2 * Math.sin(nx * Math.PI * 2 * f2 + t * 1.3);
+          d += (i === 0 ? `M ${x.toFixed(1)},${y.toFixed(1)}` : ` L ${x.toFixed(1)},${y.toFixed(1)}`);
+        }
+        return d;
+      }
+
+      function waveY(nx, baseY, a1, f1, a2, f2, t) {
+        return baseY
+          + a1 * Math.sin(nx * Math.PI * 2 * f1 + t)
+          + a2 * Math.sin(nx * Math.PI * 2 * f2 + t * 1.3);
+      }
+
+      let t = 0;
+      function tick() {
+        t += 0.007;   // speed — lower = slower / more oceanic
+        const [cfg1, cfg2, cfg3] = WAVES;
+
+        w1.setAttribute('d', buildPath(...cfg1.slice(0,5), t * cfg1[5]));
+        w2.setAttribute('d', buildPath(...cfg2.slice(0,5), t * cfg2[5]));
+        w3.setAttribute('d', buildPath(...cfg3.slice(0,5), t * cfg3[5]));
+
+        // Bloom markers ride wave-1
+        const t1 = t * cfg1[5];
+        bm1.setAttribute('cy', waveY(MARKERS[0], ...cfg1.slice(0,5), t1).toFixed(1));
+        bm2.setAttribute('cy', waveY(MARKERS[1], ...cfg1.slice(0,5), t1).toFixed(1));
+        bm3.setAttribute('cy', waveY(MARKERS[2], ...cfg1.slice(0,5), t1).toFixed(1));
+        bm4.setAttribute('cy', waveY(MARKERS[3], ...cfg1.slice(0,5), t1).toFixed(1));
+
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    })();
+
+    // Nav scroll behavior
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 60);
+    }, { passive: true });
+
+    // Hero stat count-up
+    const statEl = document.getElementById('stat-text');
+    const finalText = '2 HIGH-RISK STATIONS THIS WEEK — UPDATED 6H AGO';
+    let frame = 0;
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ·—';
+    const scramble = setInterval(() => {
+      frame++;
+      if (frame > 18) {
+        statEl.textContent = finalText;
+        clearInterval(scramble);
+        return;
+      }
+      const revealed = Math.floor((frame / 18) * finalText.length);
+      statEl.textContent = finalText.slice(0, revealed) +
+        finalText.slice(revealed).replace(/[^ ]/g, () => chars[Math.floor(Math.random() * chars.length)]);
+    }, 60);
+
+    // Scroll reveal for stake cards
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.js-reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
