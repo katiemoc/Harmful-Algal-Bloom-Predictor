@@ -268,11 +268,11 @@ HTML_TEMPLATE = r"""
     <span class="topbar-logo">HAB Predictor</span>
     <span class="topbar-sub">California Coastal Risk Dashboard</span>
     <div class="topbar-right">
-      <span class="topbar-update">Week of {{ summary.latest_update }} · Updated Monday 06:00 UTC</span>
+     <span class="topbar-update">Latest available dataset week: {{ summary.latest_update }}</span>
       {% if summary.high_count > 0 %}
       <div class="topbar-alert">
         <div class="alert-dot"></div>
-        {{ summary.high_count }} HIGH-RISK STATION{% if summary.high_count != 1 %}S{% endif %}
+        {{ summary.high_count }} HIGH-RISK ESTIMATE{% if summary.high_count != 1 %}S{% endif %}
       </div>
       {% endif %}
     </div>
@@ -283,7 +283,7 @@ HTML_TEMPLATE = r"""
     <div style="position:relative;flex:1;height:100%;">
       <div id="map"></div>
       <div class="map-overlay">
-        <div class="map-chip">{{ summary.station_count }} CalHABMAP Monitoring Stations</div>
+        <div class="map-chip">{{ summary.station_count }} CalHABMAP-linked station locations</div>
         <div class="map-legend">
           <div class="legend-row"><div class="l-dot high"></div>High risk</div>
           <div class="legend-row"><div class="l-dot medium"></div>Elevated</div>
@@ -303,7 +303,7 @@ HTML_TEMPLATE = r"""
         </div>
         <div class="metric-cell">
           <div class="metric-val danger">{{ summary.high_count }}</div>
-          <div class="metric-label">high risk<br>this week</div>
+          <div class="metric-label">high-risk<br>estimates</div>
         </div>
         <div class="metric-cell">
           <div class="metric-val caution">{{ summary.medium_count }}</div>
@@ -311,7 +311,7 @@ HTML_TEMPLATE = r"""
         </div>
         <div class="metric-cell">
           <div class="metric-val ok">{{ summary.low_count }}</div>
-          <div class="metric-label">stations<br>clear</div>
+          <div class="metric-label">low-risk<br>estimates</div>
         </div>
       </div>
 
@@ -338,7 +338,7 @@ HTML_TEMPLATE = r"""
       <div class="model-panel">
         <div class="mp-header">
           <span class="mp-title" id="model-perf-title">Random Forest Performance</span>
-          <span class="mp-badge" id="model-perf-badge">val 2025–2026</span>
+          <span class="mp-badge" id="model-perf-badge">validation set</span>
         </div>
         <div class="mp-metrics" id="model-perf-metrics">
           <div class="mp-metric"><div class="mp-val">{{ "%.2f"|format(summary.rf_metrics.roc_auc) }}</div><div class="mp-label">AUC-ROC</div></div>
@@ -350,8 +350,7 @@ HTML_TEMPLATE = r"""
 
       <!-- Disclaimer -->
       <div class="notice">
-        Demo — not a public health advisory. Trained on {{ summary.station_count }} CalHABMAP stations.
-        Live updates require automated OISST + NDBC refresh.
+        Research demo — not a public health advisory. Risk levels are model-estimated from CalHABMAP-linked observations and environmental features. Live updates would require automated OISST + NDBC data refresh.
       </div>
 
     </aside>
@@ -798,7 +797,7 @@ def build_dashboard() -> None:
     )
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(html)
+    OUT_PATH.write_text(html, encoding="utf-8")
     print(f"Wrote {OUT_PATH}")
     print(f"  RF  AUC-ROC={rf_metrics['roc_auc']:.3f}  F1={rf_metrics['f1']:.3f}  threshold={rf_thr:.3f}")
     print(f"  XGB AUC-ROC={xgb_metrics['roc_auc']:.3f}  F1={xgb_metrics['f1']:.3f}  threshold={xgb_thr:.3f}")

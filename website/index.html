@@ -1,42 +1,55 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HAB Predictor — California Harmful Algal Bloom Risk</title>
-  <meta name="description" content="Weekly harmful algal bloom risk prediction for California's coast, powered by NDBC buoy sensor data and machine learning." />
+  <meta name="description"
+    content="Research dashboard estimating weekly harmful algal bloom risk along California's coast using CalHABMAP-linked observations, NOAA environmental data, and machine learning." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200..700;1,9..144,200..700&family=DM+Sans:ital,opsz,wght@0,9..40,300..600;1,9..40,300..400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200..700;1,9..144,200..700&family=DM+Sans:ital,opsz,wght@0,9..40,300..600;1,9..40,300..400&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
 
   <style>
     /* ── TOKENS ───────────────────────────────────────── */
     :root {
-      --void:       #0b1920;
-      --navy:       #10202a;
-      --grid:       #1e3340;
-      --hero-text:  #e8ece8;
+      --void: #0b1920;
+      --navy: #10202a;
+      --grid: #1e3340;
+      --hero-text: #e8ece8;
       --muted-dark: #8fa3ad;
-      --water:      #dceff4;
-      --land:       #f4efe5;
-      --panel:      #ffffff;
-      --ink:        #10202a;
-      --muted:      #5d6b73;
-      --line:       #d9e2e7;
-      --bg:         #f7fafb;
-      --teal:       #1b8fa8;
-      --low:        #2f8f68;
-      --medium:     #c4881a;
-      --high:       #c63d3d;
-      --high-glow:  rgba(198,61,61,0.18);
-      --shadow:     0 2px 12px rgba(16,32,42,0.08);
-      --shadow-lg:  0 12px 40px rgba(16,32,42,0.14);
+      --water: #dceff4;
+      --land: #f4efe5;
+      --panel: #ffffff;
+      --ink: #10202a;
+      --muted: #5d6b73;
+      --line: #d9e2e7;
+      --bg: #f7fafb;
+      --teal: #1b8fa8;
+      --low: #2f8f68;
+      --medium: #c4881a;
+      --high: #c63d3d;
+      --high-glow: rgba(198, 61, 61, 0.18);
+      --shadow: 0 2px 12px rgba(16, 32, 42, 0.08);
+      --shadow-lg: 0 12px 40px rgba(16, 32, 42, 0.14);
     }
 
     /* ── RESET ────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
       font-family: 'DM Sans', ui-sans-serif, sans-serif;
@@ -50,19 +63,22 @@
     /* ── NAV ──────────────────────────────────────────── */
     .nav {
       position: fixed;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      right: 0;
       z-index: 100;
       padding: 0 clamp(20px, 4vw, 56px);
       height: 52px;
       display: flex;
       align-items: center;
       gap: 0;
-      background: rgba(11,25,32,0);
+      background: rgba(11, 25, 32, 0);
       transition: background 0.3s, border-color 0.3s;
       border-bottom: 1px solid transparent;
     }
+
     .nav.scrolled {
-      background: rgba(11,25,32,0.94);
+      background: rgba(11, 25, 32, 0.94);
       backdrop-filter: blur(8px);
       border-bottom-color: var(--grid);
     }
@@ -92,7 +108,10 @@
       text-decoration: none;
       transition: color 0.15s;
     }
-    .nav-links a:hover { color: var(--water); }
+
+    .nav-links a:hover {
+      color: var(--water);
+    }
 
     .nav-cta {
       background: var(--high) !important;
@@ -101,7 +120,10 @@
       border-radius: 4px;
       font-weight: 500 !important;
     }
-    .nav-cta:hover { background: #a83333 !important; }
+
+    .nav-cta:hover {
+      background: #a83333 !important;
+    }
 
     /* ── HERO ─────────────────────────────────────────── */
     .hero {
@@ -119,7 +141,8 @@
     .tide-bg {
       position: absolute;
       inset: 0;
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       pointer-events: none;
     }
 
@@ -168,15 +191,28 @@
       color: var(--high);
       margin-bottom: 36px;
     }
+
     .hero-stat-dot {
-      width: 8px; height: 8px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: var(--high);
       box-shadow: 0 0 8px var(--high), 0 0 20px var(--high-glow);
       flex-shrink: 0;
       animation: blink 2s ease-in-out infinite;
     }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.35
+      }
+    }
 
     .hero-cta {
       display: inline-flex;
@@ -189,7 +225,11 @@
       text-decoration: none;
       transition: gap 0.2s, color 0.15s;
     }
-    .hero-cta:hover { gap: 16px; color: var(--hero-text); }
+
+    .hero-cta:hover {
+      gap: 16px;
+      color: var(--hero-text);
+    }
 
     .buoy-ghost {
       position: absolute;
@@ -236,9 +276,19 @@
       transform: translateY(20px);
       transition: opacity 0.5s ease, transform 0.5s ease;
     }
-    .stake-card.visible { opacity: 1; transform: translateY(0); }
-    .stake-card:nth-child(2) { transition-delay: 0.1s; }
-    .stake-card:nth-child(3) { transition-delay: 0.2s; }
+
+    .stake-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .stake-card:nth-child(2) {
+      transition-delay: 0.1s;
+    }
+
+    .stake-card:nth-child(3) {
+      transition-delay: 0.2s;
+    }
 
     .stake-num {
       font-family: 'Fraunces', serif;
@@ -247,9 +297,18 @@
       line-height: 1;
       margin-bottom: 12px;
     }
-    .stake-num.red { color: var(--high); }
-    .stake-num.amber { color: var(--medium); }
-    .stake-num.teal { color: var(--teal); }
+
+    .stake-num.red {
+      color: var(--high);
+    }
+
+    .stake-num.amber {
+      color: var(--medium);
+    }
+
+    .stake-num.teal {
+      color: var(--teal);
+    }
 
     .stake-title {
       font-size: 15px;
@@ -279,7 +338,9 @@
     }
 
     @media (max-width: 760px) {
-      .how-inner { grid-template-columns: 1fr; }
+      .how-inner {
+        grid-template-columns: 1fr;
+      }
     }
 
     .how-heading {
@@ -312,7 +373,10 @@
       padding: 14px 0;
       border-bottom: 1px solid var(--line);
     }
-    .pipeline-step:last-child { border-bottom: none; }
+
+    .pipeline-step:last-child {
+      border-bottom: none;
+    }
 
     .step-num {
       font-family: 'DM Mono', monospace;
@@ -329,6 +393,7 @@
       font-weight: 500;
       color: var(--ink);
     }
+
     .step-sub {
       font-family: 'DM Mono', monospace;
       font-size: 11px;
@@ -385,14 +450,25 @@
 
     .sdot {
       position: absolute;
-      width: 12px; height: 12px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.7);
+      border: 2px solid rgba(255, 255, 255, 0.7);
       transform: translate(-50%, -50%);
     }
-    .sdot.high   { background: var(--high); box-shadow: 0 0 8px var(--high); }
-    .sdot.medium { background: var(--medium); }
-    .sdot.low    { background: var(--low); }
+
+    .sdot.high {
+      background: var(--high);
+      box-shadow: 0 0 8px var(--high);
+    }
+
+    .sdot.medium {
+      background: var(--medium);
+    }
+
+    .sdot.low {
+      background: var(--low);
+    }
 
     .map-legend-mini {
       position: relative;
@@ -400,6 +476,7 @@
       display: flex;
       gap: 12px;
     }
+
     .ml-item {
       display: flex;
       align-items: center;
@@ -408,10 +485,24 @@
       font-size: 9px;
       color: var(--muted-dark);
     }
-    .ml-dot { width: 7px; height: 7px; border-radius: 50%; }
-    .ml-dot.high { background: var(--high); }
-    .ml-dot.medium { background: var(--medium); }
-    .ml-dot.low { background: var(--low); }
+
+    .ml-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    .ml-dot.high {
+      background: var(--high);
+    }
+
+    .ml-dot.medium {
+      background: var(--medium);
+    }
+
+    .ml-dot.low {
+      background: var(--low);
+    }
 
     /* ── EDITORIAL ────────────────────────────────────── */
     .editorial {
@@ -515,12 +606,14 @@
     }
 
     .mm-item {}
+
     .mm-val {
       font-family: 'DM Mono', monospace;
       font-size: 16px;
       font-weight: 500;
       color: var(--ink);
     }
+
     .mm-label {
       font-family: 'DM Mono', monospace;
       font-size: 10px;
@@ -543,7 +636,9 @@
 
     .threshold-map-bg {
       position: absolute;
-      top: 0; right: 0; bottom: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
       width: 50%;
       opacity: 0.12;
       display: flex;
@@ -584,8 +679,14 @@
       line-height: 2.2;
       margin-bottom: 40px;
     }
-    .threshold-data .t-high { color: var(--high); }
-    .threshold-data .t-low { color: var(--low); }
+
+    .threshold-data .t-high {
+      color: var(--high);
+    }
+
+    .threshold-data .t-low {
+      color: var(--low);
+    }
 
     .threshold-sub {
       font-size: 14px;
@@ -610,7 +711,11 @@
       text-decoration: none;
       transition: background 0.15s, gap 0.2s;
     }
-    .btn-primary:hover { background: #168097; gap: 14px; }
+
+    .btn-primary:hover {
+      background: #168097;
+      gap: 14px;
+    }
 
     .btn-ghost {
       display: inline-flex;
@@ -624,7 +729,10 @@
       margin-left: 24px;
       transition: gap 0.2s;
     }
-    .btn-ghost:hover { gap: 12px; }
+
+    .btn-ghost:hover {
+      gap: 12px;
+    }
 
     /* ── FOOTER ───────────────────────────────────────── */
     .footer {
@@ -656,7 +764,10 @@
       color: var(--muted-dark);
       text-decoration: none;
     }
-    .footer-col-body a:hover { color: var(--water); }
+
+    .footer-col-body a:hover {
+      color: var(--water);
+    }
 
     .footer-bottom {
       background: var(--navy);
@@ -678,12 +789,21 @@
 
     /* ── RESPONSIVE ───────────────────────────────────── */
     @media (max-width: 640px) {
-      .nav-links { display: none; }
-      .threshold-map-bg { display: none; }
-      .btn-ghost { display: none; }
+      .nav-links {
+        display: none;
+      }
+
+      .threshold-map-bg {
+        display: none;
+      }
+
+      .btn-ghost {
+        display: none;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <!-- ── NAV ───────────────────────────────────────────── -->
@@ -693,30 +813,31 @@
       <li><a href="#how">How it works</a></li>
       <li><a href="#models">Models</a></li>
       <li><a href="#data">Data</a></li>
-      <li><a href="../dashboard/site/index.html" class="nav-cta">Live dashboard →</a></li>
+      <li><a href="../dashboard/site/index.html" class="nav-cta">Risk dashboard →</a></li>
     </ul>
   </nav>
 
   <!-- ── HERO ──────────────────────────────────────────── -->
   <section class="hero">
     <!-- Tide chart SVG (historical bloom event data as oscillating lines) -->
-    <svg class="tide-bg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg class="tide-bg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true">
       <!-- animated wave paths — d attributes set by JS -->
-      <path id="wave-1" fill="none" stroke="#1e3340" stroke-width="1.5" opacity="0.7"/>
-      <path id="wave-2" fill="none" stroke="#1e3340" stroke-width="1"   opacity="0.45"/>
-      <path id="wave-3" fill="none" stroke="#1e3340" stroke-width="0.8" opacity="0.3"/>
+      <path id="wave-1" fill="none" stroke="#1e3340" stroke-width="1.5" opacity="0.7" />
+      <path id="wave-2" fill="none" stroke="#1e3340" stroke-width="1" opacity="0.45" />
+      <path id="wave-3" fill="none" stroke="#1e3340" stroke-width="0.8" opacity="0.3" />
       <!-- bloom event markers — fixed -->
-      <circle id="bm-1" cx="240"  cy="430" r="4" fill="#c63d3d" opacity="0.35"/>
-      <circle id="bm-2" cx="520"  cy="420" r="5" fill="#c63d3d" opacity="0.4"/>
-      <circle id="bm-3" cx="800"  cy="420" r="3" fill="#c4881a" opacity="0.3"/>
-      <circle id="bm-4" cx="1080" cy="420" r="4" fill="#c63d3d" opacity="0.35"/>
+      <circle id="bm-1" cx="240" cy="430" r="4" fill="#c63d3d" opacity="0.35" />
+      <circle id="bm-2" cx="520" cy="420" r="5" fill="#c63d3d" opacity="0.4" />
+      <circle id="bm-3" cx="800" cy="420" r="3" fill="#c4881a" opacity="0.3" />
+      <circle id="bm-4" cx="1080" cy="420" r="4" fill="#c63d3d" opacity="0.35" />
       <!-- grid lines — fixed -->
-      <line x1="0" y1="225" x2="1440" y2="225" stroke="#1e3340" stroke-width="0.5" opacity="0.4"/>
-      <line x1="0" y1="450" x2="1440" y2="450" stroke="#1e3340" stroke-width="0.5" opacity="0.4"/>
-      <line x1="0" y1="675" x2="1440" y2="675" stroke="#1e3340" stroke-width="0.5" opacity="0.4"/>
-      <line x1="360"  y1="0" x2="360"  y2="900" stroke="#1e3340" stroke-width="0.5" opacity="0.3"/>
-      <line x1="720"  y1="0" x2="720"  y2="900" stroke="#1e3340" stroke-width="0.5" opacity="0.3"/>
-      <line x1="1080" y1="0" x2="1080" y2="900" stroke="#1e3340" stroke-width="0.5" opacity="0.3"/>
+      <line x1="0" y1="225" x2="1440" y2="225" stroke="#1e3340" stroke-width="0.5" opacity="0.4" />
+      <line x1="0" y1="450" x2="1440" y2="450" stroke="#1e3340" stroke-width="0.5" opacity="0.4" />
+      <line x1="0" y1="675" x2="1440" y2="675" stroke="#1e3340" stroke-width="0.5" opacity="0.4" />
+      <line x1="360" y1="0" x2="360" y2="900" stroke="#1e3340" stroke-width="0.5" opacity="0.3" />
+      <line x1="720" y1="0" x2="720" y2="900" stroke="#1e3340" stroke-width="0.5" opacity="0.3" />
+      <line x1="1080" y1="0" x2="1080" y2="900" stroke="#1e3340" stroke-width="0.5" opacity="0.3" />
     </svg>
 
     <div class="hero-inner">
@@ -725,7 +846,8 @@
         The bloom arrives<br>before the warning does.
       </h1>
       <p class="hero-sub">
-        Harmful algal blooms close beaches, poison shellfish, and kill marine mammals. We predict them 7 days out using NDBC buoy sensor arrays and machine learning.
+        Harmful algal blooms close beaches, poison shellfish, and kill marine mammals. We predict them 7 days out using
+        NDBC buoy sensor arrays and machine learning.
       </p>
       <div class="hero-stat" id="hero-stat">
         <div class="hero-stat-dot"></div>
@@ -750,17 +872,20 @@
       <div class="stake-card js-reveal">
         <div class="stake-num red">$100M+</div>
         <div class="stake-title">Annual aquaculture losses</div>
-        <div class="stake-body">A single large bloom event can trigger shellfish harvest closures from San Diego to the Oregon border — shutting down an industry that employs tens of thousands of Californians.</div>
+        <div class="stake-body">A single large bloom event can trigger shellfish harvest closures from San Diego to the
+          Oregon border — shutting down an industry that employs tens of thousands of Californians.</div>
       </div>
       <div class="stake-card js-reveal">
         <div class="stake-num amber">7 days</div>
         <div class="stake-title">Advance warning we provide</div>
-        <div class="stake-body">Enough time for fisheries managers to suspend harvests, for beach managers to post advisories, for aquaculture operators to move their stock before domoic acid reaches toxic levels.</div>
+        <div class="stake-body">Enough time for fisheries managers to suspend harvests, for beach managers to post
+          advisories, for aquaculture operators to move their stock before domoic acid reaches toxic levels.</div>
       </div>
       <div class="stake-card js-reveal">
         <div class="stake-num teal">10</div>
         <div class="stake-title">CalHABMAP stations monitored</div>
-        <div class="stake-body">From Trinidad Pier in Humboldt County to Scripps Pier in San Diego — 10 NOAA NDBC buoy stations trained into a statewide bloom risk model updated every week.</div>
+        <div class="stake-body">From Trinidad Pier in Humboldt County to Scripps Pier in San Diego — 10 NOAA NDBC buoy
+          stations trained into a statewide bloom risk model updated every week.</div>
       </div>
     </div>
   </section>
@@ -772,7 +897,9 @@
         <p class="section-eyebrow">Methodology</p>
         <h2 class="how-heading">From buoy to bloom probability.</h2>
         <p class="how-body">
-          Every week, NOAA NDBC buoys record sea surface temperature, wind speed, wave height, and atmospheric pressure along the California coast. That data, combined with chlorophyll readings and historical CalHABMAP bloom observations, feeds two trained machine learning models.
+          Every week, NOAA NDBC buoys record sea surface temperature, wind speed, wave height, and atmospheric pressure
+          along the California coast. That data, combined with chlorophyll readings and historical CalHABMAP bloom
+          observations, feeds two trained machine learning models.
         </p>
         <div class="pipeline">
           <div class="pipeline-step">
@@ -811,46 +938,55 @@
         <div class="map-preview">
           <svg class="ca-svg" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <!-- Simplified California coastline path -->
-            <path d="M 80,10 L 70,30 L 60,55 L 55,80 L 50,110 L 45,140 L 50,165 L 55,185 L 65,200 L 80,215 L 100,225 L 115,235 L 130,255 L 140,270 L 155,285 L 165,300 L 170,310"
-              fill="none" stroke="#dceff4" stroke-width="2" stroke-linecap="round"/>
+            <path
+              d="M 80,10 L 70,30 L 60,55 L 55,80 L 50,110 L 45,140 L 50,165 L 55,185 L 65,200 L 80,215 L 100,225 L 115,235 L 130,255 L 140,270 L 155,285 L 165,300 L 170,310"
+              fill="none" stroke="#dceff4" stroke-width="2" stroke-linecap="round" />
           </svg>
 
           <!-- Real CalHABMAP station positions (approximate % within mini-map viewport) -->
           <div class="station-dots" aria-hidden="true">
             <!-- Trinidad Pier 41.05°N → ~7% from top -->
-            <div class="sdot high"   style="top:7%;  left:38%;"></div>
+            <div class="sdot high" style="top:7%;  left:38%;"></div>
             <!-- Humboldt 40.78°N -->
-            <div class="sdot high"   style="top:10%; left:36%;"></div>
+            <div class="sdot high" style="top:10%; left:36%;"></div>
             <!-- Humboldt South Bay 40.72°N -->
             <div class="sdot medium" style="top:11%; left:35%;"></div>
             <!-- [gap — no stations 37–40°N] -->
             <!-- Santa Cruz Wharf 36.96°N → ~53% from top -->
             <div class="sdot medium" style="top:53%; left:55%;"></div>
             <!-- Monterey Wharf 36.60°N -->
-            <div class="sdot low"    style="top:57%; left:57%;"></div>
+            <div class="sdot low" style="top:57%; left:57%;"></div>
             <!-- Cal Poly Pier 35.17°N -->
-            <div class="sdot low"    style="top:68%; left:62%;"></div>
+            <div class="sdot low" style="top:68%; left:62%;"></div>
             <!-- Stearns Wharf 34.41°N -->
-            <div class="sdot low"    style="top:75%; left:68%;"></div>
+            <div class="sdot low" style="top:75%; left:68%;"></div>
             <!-- Santa Monica Pier 34.01°N -->
-            <div class="sdot low"    style="top:80%; left:74%;"></div>
+            <div class="sdot low" style="top:80%; left:74%;"></div>
             <!-- Newport Beach 33.61°N -->
-            <div class="sdot low"    style="top:85%; left:78%;"></div>
+            <div class="sdot low" style="top:85%; left:78%;"></div>
             <!-- Scripps Pier 32.87°N -->
-            <div class="sdot low"    style="top:91%; left:82%;"></div>
+            <div class="sdot low" style="top:91%; left:82%;"></div>
           </div>
 
           <div class="map-preview-inner">
             <div class="map-label">10 CalHABMAP stations · real-time risk</div>
             <div class="map-legend-mini">
-              <div class="ml-item"><div class="ml-dot high"></div>High</div>
-              <div class="ml-item"><div class="ml-dot medium"></div>Elevated</div>
-              <div class="ml-item"><div class="ml-dot low"></div>Low</div>
+              <div class="ml-item">
+                <div class="ml-dot high"></div>High
+              </div>
+              <div class="ml-item">
+                <div class="ml-dot medium"></div>Elevated
+              </div>
+              <div class="ml-item">
+                <div class="ml-dot low"></div>Low
+              </div>
             </div>
           </div>
         </div>
-        <p style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:12px;letter-spacing:0.04em;">
-          Stations: Trinidad Pier · Humboldt · Santa Cruz · Monterey · Cal Poly · Santa Barbara · Santa Monica · Newport Beach · Scripps Pier
+        <p
+          style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:12px;letter-spacing:0.04em;">
+          Stations: Trinidad Pier · Humboldt · Santa Cruz · Monterey · Cal Poly · Santa Barbara · Santa Monica · Newport
+          Beach · Scripps Pier
         </p>
       </div>
     </div>
@@ -861,7 +997,11 @@
     <div class="editorial-inner">
       <p class="section-eyebrow">Field note</p>
       <blockquote class="field-note">
-        Alexandrium catenella has been blooming off the California coast for longer than the state has existed. The paralytic shellfish toxins it produces — saxitoxins — survive cooking at any temperature and persist in shellfish tissue for weeks after the bloom subsides. A single contaminated mussel can cause paralytic shellfish poisoning in under an hour. The blooms are ancient, natural, and indifferent to harvest schedules. What's changed is our ability to see them coming.
+        Alexandrium catenella has been blooming off the California coast for longer than the state has existed. The
+        paralytic shellfish toxins it produces — saxitoxins — survive cooking at any temperature and persist in
+        shellfish tissue for weeks after the bloom subsides. A single contaminated mussel can cause paralytic shellfish
+        poisoning in under an hour. The blooms are ancient, natural, and indifferent to harvest schedules. What's
+        changed is our ability to see them coming.
       </blockquote>
       <p class="field-note-source">— HAB Predictor research team, based on CalHABMAP and CDPH toxicology data</p>
     </div>
@@ -880,24 +1020,46 @@
           <div class="model-card-name">Model 01</div>
           <div class="model-card-title">Random Forest</div>
           <div class="model-card-body">
-            700 decision trees trained on CalHABMAP weekly observations from 2008–2024. Balanced subsampling handles the class imbalance between rare harmful bloom events and the majority of non-harmful weeks. Threshold optimized for maximum F1 on a held-out 2025 validation set.
+            700 decision trees trained on CalHABMAP weekly observations from 2008–2024. Balanced subsampling handles the
+            class imbalance between rare harmful bloom events and the majority of non-harmful weeks. Threshold optimized
+            for maximum F1 on a held-out 2025 validation set.
           </div>
           <div class="model-metrics-row">
-            <div class="mm-item"><div class="mm-val">0.88</div><div class="mm-label">AUC-ROC</div></div>
-            <div class="mm-item"><div class="mm-val">700</div><div class="mm-label">Trees</div></div>
-            <div class="mm-item"><div class="mm-val">6</div><div class="mm-label">Max depth</div></div>
+            <div class="mm-item">
+              <div class="mm-val">0.88</div>
+              <div class="mm-label">AUC-ROC</div>
+            </div>
+            <div class="mm-item">
+              <div class="mm-val">700</div>
+              <div class="mm-label">Trees</div>
+            </div>
+            <div class="mm-item">
+              <div class="mm-val">6</div>
+              <div class="mm-label">Max depth</div>
+            </div>
           </div>
         </div>
         <div class="model-card">
           <div class="model-card-name">Model 02</div>
           <div class="model-card-title">XGBoost</div>
           <div class="model-card-body">
-            Gradient boosted trees trained on the same feature set. XGBoost's sequential boosting focuses on the hard-to-classify weeks — the edge cases where a bloom is borderline. Provides a second opinion where the Random Forest is uncertain.
+            Gradient boosted trees trained on the same feature set. XGBoost's sequential boosting focuses on the
+            hard-to-classify weeks — the edge cases where a bloom is borderline. Provides a second opinion where the
+            Random Forest is uncertain.
           </div>
           <div class="model-metrics-row">
-            <div class="mm-item"><div class="mm-val">XGB</div><div class="mm-label">Algorithm</div></div>
-            <div class="mm-item"><div class="mm-val">F1</div><div class="mm-label">Optimized</div></div>
-            <div class="mm-item"><div class="mm-val">2025</div><div class="mm-label">Val set</div></div>
+            <div class="mm-item">
+              <div class="mm-val">XGB</div>
+              <div class="mm-label">Algorithm</div>
+            </div>
+            <div class="mm-item">
+              <div class="mm-val">F1</div>
+              <div class="mm-label">Optimized</div>
+            </div>
+            <div class="mm-item">
+              <div class="mm-val">2025</div>
+              <div class="mm-label">Val set</div>
+            </div>
           </div>
         </div>
       </div>
@@ -909,37 +1071,39 @@
     <!-- background map silhouette -->
     <div class="threshold-map-bg" aria-hidden="true">
       <svg viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg" style="height:90%;opacity:0.8;">
-        <path d="M 80,10 L 70,30 L 60,55 L 55,80 L 50,110 L 45,140 L 50,165 L 55,185 L 65,200 L 80,215 L 100,225 L 115,235 L 130,255 L 140,270 L 155,285 L 165,300 L 170,320"
-          fill="none" stroke="#1e3340" stroke-width="3"/>
+        <path
+          d="M 80,10 L 70,30 L 60,55 L 55,80 L 50,110 L 45,140 L 50,165 L 55,185 L 65,200 L 80,215 L 100,225 L 115,235 L 130,255 L 140,270 L 155,285 L 165,300 L 170,320"
+          fill="none" stroke="#1e3340" stroke-width="3" />
         <!-- station dots on threshold map -->
-        <circle cx="66" cy="33"  r="5" fill="#c63d3d" opacity="0.6"/>
-        <circle cx="63" cy="40"  r="4" fill="#c63d3d" opacity="0.5"/>
-        <circle cx="62" cy="43"  r="3.5" fill="#c4881a" opacity="0.4"/>
-        <circle cx="88" cy="204" r="3" fill="#c4881a" opacity="0.4"/>
-        <circle cx="93" cy="213" r="3" fill="#2f8f68" opacity="0.4"/>
-        <circle cx="108" cy="229" r="3" fill="#2f8f68" opacity="0.4"/>
-        <circle cx="122" cy="242" r="3" fill="#2f8f68" opacity="0.4"/>
-        <circle cx="134" cy="258" r="3" fill="#2f8f68" opacity="0.4"/>
-        <circle cx="143" cy="271" r="3" fill="#2f8f68" opacity="0.4"/>
-        <circle cx="158" cy="288" r="3" fill="#2f8f68" opacity="0.4"/>
+        <circle cx="66" cy="33" r="5" fill="#c63d3d" opacity="0.6" />
+        <circle cx="63" cy="40" r="4" fill="#c63d3d" opacity="0.5" />
+        <circle cx="62" cy="43" r="3.5" fill="#c4881a" opacity="0.4" />
+        <circle cx="88" cy="204" r="3" fill="#c4881a" opacity="0.4" />
+        <circle cx="93" cy="213" r="3" fill="#2f8f68" opacity="0.4" />
+        <circle cx="108" cy="229" r="3" fill="#2f8f68" opacity="0.4" />
+        <circle cx="122" cy="242" r="3" fill="#2f8f68" opacity="0.4" />
+        <circle cx="134" cy="258" r="3" fill="#2f8f68" opacity="0.4" />
+        <circle cx="143" cy="271" r="3" fill="#2f8f68" opacity="0.4" />
+        <circle cx="158" cy="288" r="3" fill="#2f8f68" opacity="0.4" />
       </svg>
     </div>
 
     <div class="threshold-content">
-      <p class="threshold-eyebrow">Live risk map</p>
-      <h2 class="threshold-headline">Right now.</h2>
+      <p class="threshold-eyebrow">Latest dataset snapshot</p>
+      <h2 class="threshold-headline">Model-estimated risk.</h2>
       <div class="threshold-data">
-        10 stations monitored along the California coast<br>
-        <span class="t-high">2 stations above harmful threshold this week</span><br>
-        <span class="t-low">7 stations within normal range</span><br>
-        1 station offline — interpolated<br>
-        Last model run: Monday 06:00 UTC
+        10 CalHABMAP-linked station locations along the California coast<br>
+        <span class="t-high">2 high-risk model estimates in the displayed dataset snapshot</span><br>
+        <span class="t-low">4 low-risk model estimates</span><br>
+        4 elevated model estimates<br>
+        Latest available dataset week: 2026-03-23
       </div>
       <p class="threshold-sub">
-        The live dashboard shows current bloom risk for all 10 CalHABMAP stations, with predictions from both the Random Forest and XGBoost models.
+        The dashboard shows model-estimated harmful bloom risk for the latest available station-weeks in the dataset.
+        These outputs are research estimates from Random Forest and XGBoost models, not public health guidance.
       </p>
       <div>
-        <a href="../dashboard/site/index.html" class="btn-primary">Open live risk map →</a>
+        <a href="./dashboard/site/index.html" class="btn-primary">Open risk dashboard →</a>
         <a href="#how" class="btn-ghost">↑ How it works</a>
       </div>
     </div>
@@ -962,7 +1126,7 @@
         Random Forest Classifier<br>
         XGBoost Classifier<br>
         Training: 2008–2024<br>
-        Validation: 2025–2026
+        Evaluation: time-based holdout
       </p>
     </div>
     <div>
@@ -970,7 +1134,7 @@
       <p class="footer-col-body">
         10 CalHABMAP stations<br>
         Trinidad Pier → Scripps Pier<br>
-        Weekly predictions, Mon update<br>
+        Weekly model estimates<br>
         Binary: Harmful / Not harmful
       </p>
     </div>
@@ -979,7 +1143,7 @@
       <p class="footer-col-body">
         <a href="https://github.com">GitHub repository</a><br>
         <a href="#models">Methodology</a><br>
-        <a href="../dashboard/site/index.html">Live dashboard</a><br>
+        <a href="../dashboard/site/index.html">Risk dashboard</a><br>
         Research project — not a public health advisory
       </p>
     </div>
@@ -1006,13 +1170,13 @@
 
       // Wave configs: [baseY, amp1, freq1, amp2, freq2, speedMul]
       const WAVES = [
-        [450, 36, 2.4, 18, 5.2, 1.0 ],   // wave-1 (primary, most visible)
+        [450, 36, 2.4, 18, 5.2, 1.0],   // wave-1 (primary, most visible)
         [550, 28, 2.0, 14, 4.6, 0.75],   // wave-2 (lower, slower)
-        [350, 20, 3.1, 10, 6.4, 1.3 ],   // wave-3 (upper, faster)
+        [350, 20, 3.1, 10, 6.4, 1.3],   // wave-3 (upper, faster)
       ];
 
       // Bloom marker x positions (0–1 normalised along W)
-      const MARKERS = [240/W, 520/W, 800/W, 1080/W];
+      const MARKERS = [240 / W, 520 / W, 800 / W, 1080 / W];
 
       function buildPath(baseY, a1, f1, a2, f2, t) {
         let d = '';
@@ -1038,16 +1202,16 @@
         t += 0.007;   // speed — lower = slower / more oceanic
         const [cfg1, cfg2, cfg3] = WAVES;
 
-        w1.setAttribute('d', buildPath(...cfg1.slice(0,5), t * cfg1[5]));
-        w2.setAttribute('d', buildPath(...cfg2.slice(0,5), t * cfg2[5]));
-        w3.setAttribute('d', buildPath(...cfg3.slice(0,5), t * cfg3[5]));
+        w1.setAttribute('d', buildPath(...cfg1.slice(0, 5), t * cfg1[5]));
+        w2.setAttribute('d', buildPath(...cfg2.slice(0, 5), t * cfg2[5]));
+        w3.setAttribute('d', buildPath(...cfg3.slice(0, 5), t * cfg3[5]));
 
         // Bloom markers ride wave-1
         const t1 = t * cfg1[5];
-        bm1.setAttribute('cy', waveY(MARKERS[0], ...cfg1.slice(0,5), t1).toFixed(1));
-        bm2.setAttribute('cy', waveY(MARKERS[1], ...cfg1.slice(0,5), t1).toFixed(1));
-        bm3.setAttribute('cy', waveY(MARKERS[2], ...cfg1.slice(0,5), t1).toFixed(1));
-        bm4.setAttribute('cy', waveY(MARKERS[3], ...cfg1.slice(0,5), t1).toFixed(1));
+        bm1.setAttribute('cy', waveY(MARKERS[0], ...cfg1.slice(0, 5), t1).toFixed(1));
+        bm2.setAttribute('cy', waveY(MARKERS[1], ...cfg1.slice(0, 5), t1).toFixed(1));
+        bm3.setAttribute('cy', waveY(MARKERS[2], ...cfg1.slice(0, 5), t1).toFixed(1));
+        bm4.setAttribute('cy', waveY(MARKERS[3], ...cfg1.slice(0, 5), t1).toFixed(1));
 
         requestAnimationFrame(tick);
       }
@@ -1084,4 +1248,5 @@
     document.querySelectorAll('.js-reveal').forEach(el => observer.observe(el));
   </script>
 </body>
+
 </html>
