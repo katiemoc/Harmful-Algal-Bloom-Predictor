@@ -1,0 +1,118 @@
+name: Update weekly HAB model feed
+
+on:
+  schedule:
+    # Tuesdays leave time for weekly source data to appear after Monday week_start.
+    - cron: "0 14 * * 2"
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: "Optional YYYY-MM-DD start date. Leave blank to use the script default: last 90 days."
+        required: false
+        default: ""
+      use_existing:
+        description: "Use cached files already in the repository instead of downloading fresh source data."
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      upload_to_supabase:
+        description: "Upload weekly_model_feed.csv to Supabase after rebuilding it."
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-hab-model-feed
+  cancel-in-progress: false
+
+jobs:
+  update-weekly-feed:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: requirements-weekly.txt
+
+      - name: Install weekly pipeline dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-weekly.txt
+
+      - name: Restore source-data cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/raw/calhabmap_weekly_live
+            data/raw/ndbc_realtime
+            data/raw/oisst_v21_avhrr
+          key: hab-source-data-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            hab-source-data-${{ runner.os }}-
+
+      - name: Build latest weekly model feed
+        env:
+          START_DATE: ${{ inputs.start_date || '' }}
+          USE_EXISTING: ${{ inputs.use_existing || 'false' }}
+        run: |
+          args=()
+          if [ -n "$START_DATE" ]; then
+            args+=(--start-date "$START_DATE")
+          fi
+          if [ "$USE_EXISTING" = "true" ]; then
+            args+=(--use-existing)
+          fi
+          python scripts/build_weekly_model_feed.py "${args[@]}"
+
+      - name: Upload weekly feed to Supabase
+        env:
+          UPLOAD_TO_SUPABASE: ${{ inputs.upload_to_supabase || 'true' }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ "$UPLOAD_TO_SUPABASE" != "true" ]; then
+            echo "Skipping Supabase upload because upload_to_supabase is false."
+            exit 0
+          fi
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "Skipping Supabase upload because SUPABASE_URL secret is missing."
+            exit 0
+          fi
+          if [ -z "$SUPABASE_KEY" ] && [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "Skipping Supabase upload because SUPABASE_KEY or SUPABASE_SERVICE_ROLE_KEY secret is missing."
+            exit 0
+          fi
+          python scripts/upload_model_feed_to_supabase.py
+
+      - name: Rebuild static dashboard
+        run: python website/dashboard/build_dashboard.py
+
+      - name: Commit generated model feed and dashboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/processed/model_feed/weekly_model_feed.csv
+          git add data/processed/model_feed/latest_model_feed.csv
+          git add website/dashboard/site/index.html
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+          else
+            git commit -m "Update weekly HAB model feed"
+            git push
+          fi
