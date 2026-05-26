@@ -464,7 +464,12 @@ HTML_TEMPLATE = r"""
         : STATIONS.filter(s => displayRiskClass(s) === currentFilter);
 
       // Sort by current model probability descending
-      filtered.sort((a, b) => getProb(b) - getProb(a));
+        const classOrder = { high: 0, medium: 1, low: 2, insufficient: 3 };
+        filtered.sort((a, b) => {
+          const classDiff = classOrder[displayRiskClass(a)] - classOrder[displayRiskClass(b)];
+          if (classDiff !== 0) return classDiff;
+          return getProb(b) - getProb(a);
+        });
 
       list.innerHTML = filtered.map(s => {
         const prob = getProb(s);
