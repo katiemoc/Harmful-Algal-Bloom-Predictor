@@ -24,15 +24,18 @@ from sklearn.preprocessing import OneHotEncoder
 from xgboost import XGBClassifier
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 DATA_PATH = ROOT / "data" / "processed" / "merged" / "hab_ndbc_merged.csv"
-OUT_DIR = ROOT / "dashboard" / "site"
+PREDICTION_FEED_PATH = ROOT / "data" / "processed" / "model_feed" / "latest_model_feed.csv"
+OUT_DIR = ROOT / "website" / "dashboard" / "site"
 OUT_PATH = OUT_DIR / "index.html"
 
 TARGET = "isHarmful"
 EXCLUDE_COLUMNS = ["week_start", "sample_date", TARGET, "pda", "potential_bloom"]
 TRAIN_END = pd.Timestamp("2025-01-01")
 VALIDATION_END = pd.Timestamp("2026-01-01")
+RECENT_DATA_COLUMNS = ["avg_chloro", "wind_speed_mps", "sea_surface_temp_c"]
+MAX_MISSING_RECENT_COLUMNS = 1
 
 # Real CalHABMAP station coordinates (from dataset)
 STATION_COORDS: dict[str, tuple[float, float]] = {
@@ -83,6 +86,7 @@ HTML_TEMPLATE = r"""
       --low:        #2f8f68;
       --medium:     #c4881a;
       --high:       #c63d3d;
+      --insufficient:#6d7780;
       --high-glow:  rgba(198,61,61,0.18);
       --shadow:     0 2px 12px rgba(16,32,42,0.08);
       --shadow-lg:  0 8px 32px rgba(16,32,42,0.14);
@@ -147,6 +151,7 @@ HTML_TEMPLATE = r"""
     .sdot.low    { background: var(--low); }
     .sdot.medium { background: var(--medium); }
     .sdot.high   { background: var(--high); box-shadow: 0 2px 12px rgba(198,61,61,0.5); }
+    .sdot.insufficient { background: var(--insufficient); box-shadow: 0 2px 8px rgba(0,0,0,0.28); }
     .sdot.active { transform: scale(1.5); border-color: white; z-index: 1000 !important; }
     .sdot.high.active { box-shadow: 0 0 20px rgba(198,61,61,0.7); }
 
@@ -161,7 +166,7 @@ HTML_TEMPLATE = r"""
     .map-legend { background: rgba(11,25,32,0.88); backdrop-filter: blur(4px); border: 1px solid var(--grid); border-radius: 6px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
     .legend-row { display: flex; align-items: center; gap: 8px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted-dark); }
     .l-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.4); flex-shrink: 0; }
-    .l-dot.low { background: var(--low); } .l-dot.medium { background: var(--medium); } .l-dot.high { background: var(--high); }
+    .l-dot.low { background: var(--low); } .l-dot.medium { background: var(--medium); } .l-dot.high { background: var(--high); } .l-dot.insufficient { background: var(--insufficient); }
 
     /* ── SIDEBAR ── */
     .sidebar { width: var(--sidebar-w); flex-shrink: 0; height: 100%; background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; overflow: hidden; box-shadow: -4px 0 16px rgba(16,32,42,0.06); }
@@ -207,16 +212,16 @@ HTML_TEMPLATE = r"""
     .scard { border: 1px solid var(--line); border-left: 4px solid transparent; border-radius: 8px; padding: 14px; margin-bottom: 8px; background: white; cursor: pointer; transition: all 0.15s; }
     .scard:hover { box-shadow: var(--shadow); }
     .scard.active { background: #f4f8fa; box-shadow: var(--shadow-lg); }
-    .scard.low { border-left-color: var(--low); } .scard.medium { border-left-color: var(--medium); } .scard.high { border-left-color: var(--high); }
+    .scard.low { border-left-color: var(--low); } .scard.medium { border-left-color: var(--medium); } .scard.high { border-left-color: var(--high); } .scard.insufficient { border-left-color: var(--insufficient); }
     .scard.active.high { background: rgba(198,61,61,0.03); }
     .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
     .card-name { font-weight: 600; font-size: 14px; color: var(--ink); line-height: 1.2; }
     .card-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 3px; }
     .card-risk { text-align: right; flex-shrink: 0; margin-left: 10px; }
     .card-pct { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 700; line-height: 1; }
-    .card-pct.low { color: var(--low); } .card-pct.medium { color: var(--medium); } .card-pct.high { color: var(--high); }
+    .card-pct.low { color: var(--low); } .card-pct.medium { color: var(--medium); } .card-pct.high { color: var(--high); } .card-pct.insufficient { color: var(--insufficient); font-size: 16px; }
     .card-rlabel { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
-    .card-rlabel.low { color: var(--low); } .card-rlabel.medium { color: var(--medium); } .card-rlabel.high { color: var(--high); }
+    .card-rlabel.low { color: var(--low); } .card-rlabel.medium { color: var(--medium); } .card-rlabel.high { color: var(--high); } .card-rlabel.insufficient { color: var(--insufficient); }
     .card-features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
     .feat { background: var(--bg); border-radius: 4px; padding: 6px 8px; }
     .feat-val { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; color: var(--ink); }
@@ -227,7 +232,7 @@ HTML_TEMPLATE = r"""
     .mc-item { flex: 1; background: var(--bg); border-radius: 4px; padding: 6px 8px; }
     .mc-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 0.04em; }
     .mc-val { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; margin-top: 2px; }
-    .mc-val.low { color: var(--low); } .mc-val.medium { color: var(--medium); } .mc-val.high { color: var(--high); }
+    .mc-val.low { color: var(--low); } .mc-val.medium { color: var(--medium); } .mc-val.high { color: var(--high); } .mc-val.insufficient { color: var(--insufficient); }
 
     /* Model performance panel */
     .model-panel { border-top: 1px solid var(--line); padding: 14px 16px; flex-shrink: 0; background: var(--bg); }
@@ -247,14 +252,14 @@ HTML_TEMPLATE = r"""
     .pu-pct { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 700; line-height: 1; }
     .pu-pct.low { color: var(--low); } .pu-pct.medium { color: var(--medium); } .pu-pct.high { color: var(--high); }
     .pu-rlabel { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
-    .pu-rlabel.low { color: var(--low); } .pu-rlabel.medium { color: var(--medium); } .pu-rlabel.high { color: var(--high); }
+    .pu-rlabel.low { color: var(--low); } .pu-rlabel.medium { color: var(--medium); } .pu-rlabel.high { color: var(--high); } .pu-rlabel.insufficient { color: var(--insufficient); }
     .pu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
     .pu-val { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--hero-text); }
     .pu-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted-dark); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
     .pu-compare { display: flex; gap: 8px; padding-top: 10px; border-top: 1px solid var(--grid); }
     .pu-citem { flex: 1; }
     .pu-cval { font-family: 'DM Mono', monospace; font-size: 11px; }
-    .pu-cval.low { color: var(--low); } .pu-cval.medium { color: var(--medium); } .pu-cval.high { color: var(--high); }
+    .pu-cval.low { color: var(--low); } .pu-cval.medium { color: var(--medium); } .pu-cval.high { color: var(--high); } .pu-cval.insufficient { color: var(--insufficient); }
     .pu-clabel { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted-dark); margin-top: 2px; }
 
     .notice { padding: 10px 16px; border-top: 1px solid var(--line); font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); line-height: 1.6; flex-shrink: 0; }
@@ -288,6 +293,7 @@ HTML_TEMPLATE = r"""
           <div class="legend-row"><div class="l-dot high"></div>High risk</div>
           <div class="legend-row"><div class="l-dot medium"></div>Elevated</div>
           <div class="legend-row"><div class="l-dot low"></div>Low risk</div>
+          <div class="legend-row"><div class="l-dot insufficient"></div>Insufficient data</div>
         </div>
       </div>
     </div>
@@ -310,8 +316,8 @@ HTML_TEMPLATE = r"""
           <div class="metric-label">elevated<br>stations</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val ok">{{ summary.low_count }}</div>
-          <div class="metric-label">low-risk<br>estimates</div>
+          <div class="metric-val">{{ summary.insufficient_count }}</div>
+          <div class="metric-label">insufficient<br>recent data</div>
         </div>
       </div>
 
@@ -329,6 +335,7 @@ HTML_TEMPLATE = r"""
         <button class="filter-tab f-high" onclick="filterStations('high',this)">High<span class="fcnt" id="cnt-high">{{ summary.high_count }}</span></button>
         <button class="filter-tab f-medium" onclick="filterStations('medium',this)">Elevated<span class="fcnt" id="cnt-med">{{ summary.medium_count }}</span></button>
         <button class="filter-tab" onclick="filterStations('low',this)">Low<span class="fcnt" id="cnt-low">{{ summary.low_count }}</span></button>
+        <button class="filter-tab" onclick="filterStations('insufficient',this)">Insufficient<span class="fcnt" id="cnt-insufficient">{{ summary.insufficient_count }}</span></button>
       </div>
 
       <!-- Station list -->
@@ -380,7 +387,15 @@ HTML_TEMPLATE = r"""
       return 'low';
     }
     function riskLabel(cls) {
+      if (cls === 'insufficient') return 'INSUFFICIENT';
       return cls === 'medium' ? 'ELEVATED' : cls.toUpperCase();
+    }
+    function displayRiskClass(s) {
+      if (s.insufficient_recent_data) return 'insufficient';
+      return riskClass(getProb(s), getThreshold(s));
+    }
+    function displayProbability(s) {
+      return s.insufficient_recent_data ? 'DATA' : `${(getProb(s) * 100).toFixed(1)}%`;
     }
 
     function getProb(s) {
@@ -392,9 +407,7 @@ HTML_TEMPLATE = r"""
 
     // ── MARKERS ──
     STATIONS.forEach(s => {
-      const prob = s.rf_probability;
-      const threshold = DATA.summary.rf_threshold;
-      const cls = riskClass(prob, threshold);
+      const cls = s.insufficient_recent_data ? 'insufficient' : riskClass(s.rf_probability, DATA.summary.rf_threshold);
 
       const icon = L.divIcon({
         className: '',
@@ -410,20 +423,18 @@ HTML_TEMPLATE = r"""
     });
 
     function buildPopup(s) {
-      const prob = getProb(s);
-      const threshold = getThreshold(s);
-      const cls = riskClass(prob, threshold);
-      const rfCls = riskClass(s.rf_probability, DATA.summary.rf_threshold);
-      const xgbCls = riskClass(s.xgb_probability, DATA.summary.xgb_threshold);
+      const cls = displayRiskClass(s);
+      const rfCls = s.insufficient_recent_data ? 'insufficient' : riskClass(s.rf_probability, DATA.summary.rf_threshold);
+      const xgbCls = s.insufficient_recent_data ? 'insufficient' : riskClass(s.xgb_probability, DATA.summary.xgb_threshold);
       return `
         <div class="pu-inner">
           <div class="pu-name">${s.station}</div>
           <div class="pu-meta">${s.station_id} · ${s.latitude.toFixed(3)}°N · Week ${s.week_start}</div>
           <div class="pu-risk">
-            <span class="pu-pct ${cls}">${(prob * 100).toFixed(1)}%</span>
+            <span class="pu-pct ${cls}">${displayProbability(s)}</span>
             <div>
               <div class="pu-rlabel ${cls}">${riskLabel(cls)}</div>
-              <div style="font-family:'DM Mono',monospace;font-size:9px;color:#8fa3ad;margin-top:2px;">harmful probability</div>
+              <div style="font-family:'DM Mono',monospace;font-size:9px;color:#8fa3ad;margin-top:2px;">${s.insufficient_recent_data ? `missing ${s.missing_recent_count} key inputs` : 'harmful probability'}</div>
             </div>
           </div>
           <div class="pu-grid">
@@ -450,11 +461,7 @@ HTML_TEMPLATE = r"""
       const list = document.getElementById('station-list');
       const filtered = currentFilter === 'all'
         ? STATIONS
-        : STATIONS.filter(s => {
-            const prob = getProb(s);
-            const thr = getThreshold(s);
-            return riskClass(prob, thr) === currentFilter;
-          });
+        : STATIONS.filter(s => displayRiskClass(s) === currentFilter);
 
       // Sort by current model probability descending
       filtered.sort((a, b) => getProb(b) - getProb(a));
@@ -462,9 +469,9 @@ HTML_TEMPLATE = r"""
       list.innerHTML = filtered.map(s => {
         const prob = getProb(s);
         const thr = getThreshold(s);
-        const cls = riskClass(prob, thr);
-        const rfCls = riskClass(s.rf_probability, DATA.summary.rf_threshold);
-        const xgbCls = riskClass(s.xgb_probability, DATA.summary.xgb_threshold);
+        const cls = displayRiskClass(s);
+        const rfCls = s.insufficient_recent_data ? 'insufficient' : riskClass(s.rf_probability, DATA.summary.rf_threshold);
+        const xgbCls = s.insufficient_recent_data ? 'insufficient' : riskClass(s.xgb_probability, DATA.summary.xgb_threshold);
         const compareRow = activeModel === 'both' ? `
           <div class="model-compare">
             <div class="mc-item">
@@ -485,7 +492,7 @@ HTML_TEMPLATE = r"""
                 <div class="card-meta">${s.station_id} · ${s.week_start}</div>
               </div>
               <div class="card-risk">
-                <div class="card-pct ${cls}">${(prob*100).toFixed(1)}%</div>
+                <div class="card-pct ${cls}">${displayProbability(s)}</div>
                 <div class="card-rlabel ${cls}">${riskLabel(cls)}</div>
               </div>
             </div>
@@ -503,9 +510,7 @@ HTML_TEMPLATE = r"""
     // ── UPDATE MARKERS ──
     function updateMarkers() {
       STATIONS.forEach(s => {
-        const prob = getProb(s);
-        const thr = getThreshold(s);
-        const cls = riskClass(prob, thr);
+        const cls = displayRiskClass(s);
         const dot = document.getElementById(`dot-${s.id}`);
         if (dot) {
           dot.className = `sdot ${cls}${activeStation === s.id ? ' active' : ''}`;
@@ -516,14 +521,15 @@ HTML_TEMPLATE = r"""
 
     // ── UPDATE FILTER COUNTS ──
     function updateCounts() {
-      const thr = getThreshold(STATIONS[0]);
-      const hi = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'high').length;
-      const med = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'medium').length;
-      const lo = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'low').length;
+      const hi = STATIONS.filter(s => displayRiskClass(s) === 'high').length;
+      const med = STATIONS.filter(s => displayRiskClass(s) === 'medium').length;
+      const lo = STATIONS.filter(s => displayRiskClass(s) === 'low').length;
+      const insufficient = STATIONS.filter(s => displayRiskClass(s) === 'insufficient').length;
       document.getElementById('cnt-all').textContent = STATIONS.length;
       document.getElementById('cnt-high').textContent = hi;
       document.getElementById('cnt-med').textContent = med;
       document.getElementById('cnt-low').textContent = lo;
+      document.getElementById('cnt-insufficient').textContent = insufficient;
     }
 
     // ── MODEL SWITCH ──
@@ -624,6 +630,10 @@ def format_value(value: float, unit: str, digits: int = 1) -> str:
     if pd.isna(value):
         return "n/a"
     return f"{value:.{digits}f} {unit}".strip()
+
+
+def missing_recent_count(row) -> int:
+    return sum(pd.isna(getattr(row, column)) for column in RECENT_DATA_COLUMNS)
 
 
 def compute_metrics(y_true, y_pred, y_proba) -> dict:
@@ -736,14 +746,26 @@ def build_dashboard() -> None:
 
     rf_model, xgb_model, features, rf_metrics, xgb_metrics = build_models(df)
 
-    # Latest row per station
-    latest = (
-        df.sort_values(["station", "week_start"])
-        .groupby("station", as_index=False)
-        .tail(1)
-        .sort_values("station")
-        .copy()
-    )
+    # Train on the historical merged dataset, but predict on the weekly feed if it exists.
+    # This lets the map use the newest rows from scripts/build_weekly_model_feed.py.
+    if PREDICTION_FEED_PATH.exists():
+        latest = pd.read_csv(PREDICTION_FEED_PATH, parse_dates=["week_start", "sample_date"])
+        latest["station_id"] = latest["station_id"].astype(str)
+        latest = latest.sort_values("station").copy()
+        missing_features = [column for column in features if column not in latest.columns]
+        if missing_features:
+            raise ValueError(f"Prediction feed is missing model features: {missing_features}")
+        print(f"Predicting from weekly feed: {PREDICTION_FEED_PATH}")
+    else:
+        # Fallback: use the newest historical row per station.
+        latest = (
+            df.sort_values(["station", "week_start"])
+            .groupby("station", as_index=False)
+            .tail(1)
+            .sort_values("station")
+            .copy()
+        )
+        print(f"Prediction feed not found, using historical data: {data_path}")
 
     rf_probas  = rf_model.predict_proba(latest[features])[:, 1]
     xgb_probas = xgb_model.predict_proba(latest[features])[:, 1]
@@ -753,6 +775,8 @@ def build_dashboard() -> None:
     stations = []
     for row in latest.sort_values("rf_probability", ascending=False).itertuples(index=False):
         rf_label, rf_class, rf_pred = risk_label(row.rf_probability, rf_metrics["threshold"])
+        missing_count = missing_recent_count(row)
+        insufficient_recent_data = missing_count > MAX_MISSING_RECENT_COLUMNS
         lat, lng = STATION_COORDS.get(row.station, (float(row.latitude), float(row.longitude)))
         stations.append({
             "id": row.station.lower().replace(" ", "-"),
@@ -764,6 +788,8 @@ def build_dashboard() -> None:
             "rf_probability": round(float(row.rf_probability), 4),
             "xgb_probability": round(float(row.xgb_probability), 4),
             "rf_risk_class": rf_class,
+            "insufficient_recent_data": insufficient_recent_data,
+            "missing_recent_count": missing_count,
             "sst": format_value(row.sst_roll_14d, "C"),
             "ndbc_sst": format_value(row.sea_surface_temp_c, "C"),
             "wind": format_value(row.wind_speed_mps, "m/s"),
@@ -773,15 +799,18 @@ def build_dashboard() -> None:
     rf_thr  = rf_metrics["threshold"]
     xgb_thr = xgb_metrics["threshold"]
 
-    high_count   = sum(1 for s in stations if risk_label(s["rf_probability"], rf_thr)[1] == "high")
-    medium_count = sum(1 for s in stations if risk_label(s["rf_probability"], rf_thr)[1] == "medium")
-    low_count    = sum(1 for s in stations if risk_label(s["rf_probability"], rf_thr)[1] == "low")
+    eligible_stations = [s for s in stations if not s["insufficient_recent_data"]]
+    high_count   = sum(1 for s in eligible_stations if risk_label(s["rf_probability"], rf_thr)[1] == "high")
+    medium_count = sum(1 for s in eligible_stations if risk_label(s["rf_probability"], rf_thr)[1] == "medium")
+    low_count    = sum(1 for s in eligible_stations if risk_label(s["rf_probability"], rf_thr)[1] == "low")
+    insufficient_count = sum(1 for s in stations if s["insufficient_recent_data"])
 
     summary = {
         "station_count": len(stations),
         "high_count": high_count,
         "medium_count": medium_count,
         "low_count": low_count,
+        "insufficient_count": insufficient_count,
         "latest_update": latest["week_start"].max().date().isoformat(),
         "rf_threshold": rf_thr,
         "xgb_threshold": xgb_thr,
@@ -801,7 +830,7 @@ def build_dashboard() -> None:
     print(f"Wrote {OUT_PATH}")
     print(f"  RF  AUC-ROC={rf_metrics['roc_auc']:.3f}  F1={rf_metrics['f1']:.3f}  threshold={rf_thr:.3f}")
     print(f"  XGB AUC-ROC={xgb_metrics['roc_auc']:.3f}  F1={xgb_metrics['f1']:.3f}  threshold={xgb_thr:.3f}")
-    print(f"  Stations: {len(stations)} total — {high_count} high / {medium_count} medium / {low_count} low")
+    print(f"  Stations: {len(stations)} total — {high_count} high / {medium_count} medium / {low_count} low / {insufficient_count} insufficient")
 
 
 if __name__ == "__main__":

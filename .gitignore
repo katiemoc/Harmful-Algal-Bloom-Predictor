@@ -137,6 +137,11 @@ celerybeat.pid
 # Environments
 .env
 .envrc
+
+# Local pipeline download caches
+data/raw/calhabmap_weekly_live/
+data/raw/ndbc_realtime/
+data/raw/oisst_v21_avhrr/
 .venv
 env/
 venv/
