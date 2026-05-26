@@ -8,6 +8,9 @@ It talks to Supabase through the database REST API
 - `POST /api/v1/pipeline/ingest` to receive JSON and insert or upsert it into Supabase
 - `POST /api/v1/pipeline/transform` to preview source-specific normalization before writing
 - `POST /api/v1/pipeline/query` to fetch rows back for the frontend using JSON filters
+- `POST /api/v1/pipeline/model-feed/build` to run the HAB/OISST/NDBC weekly feed pipeline
+- `POST /api/v1/pipeline/model-feed/upload` to upload the weekly feed CSV to Supabase
+- `POST /api/v1/pipeline/model-feed/rebuild-dashboard` to regenerate the static dashboard from the latest feed
 - `GET /api/v1/pipeline/sources` to list registered payload transformers
 - `GET /api/v1/health` for a quick configuration check
 
@@ -87,6 +90,37 @@ backend/
   "ascending": false,
   "limit": 25
 }
+```
+
+## Weekly model feed endpoints
+
+Build the local weekly model feed and regenerate the dashboard:
+
+```json
+POST /api/v1/pipeline/model-feed/build
+{
+  "start_date": "2026-01-01",
+  "use_existing": true,
+  "rebuild_dashboard": true
+}
+```
+
+Upload `data/processed/model_feed/weekly_model_feed.csv` to Supabase:
+
+```json
+POST /api/v1/pipeline/model-feed/upload
+{
+  "table": "hab_model_feed",
+  "batch_size": 500,
+  "dry_run": false
+}
+```
+
+For uploads, use a service role key in `backend/.env`:
+
+```bash
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_KEY=your-service-role-key
 ```
 
 ## Adding a new source transformer

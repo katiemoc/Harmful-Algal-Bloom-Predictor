@@ -112,3 +112,31 @@ class QueryResponse(BaseModel):
     table: str
     records_returned: int
     data: list[dict[str, Any]]
+
+
+class ModelFeedBuildRequest(BaseModel):
+    start_date: str = Field(default="2026-01-01", pattern=r"^\d{4}-\d{2}-\d{2}$")
+    use_existing: bool = False
+    output: str | None = None
+    rebuild_dashboard: bool = True
+
+
+class ModelFeedUploadRequest(BaseModel):
+    feed: str | None = None
+    table: str = Field(default="hab_model_feed", min_length=1, max_length=120)
+    batch_size: int = Field(default=500, ge=1, le=5000)
+    dry_run: bool = False
+
+    @field_validator("table")
+    @classmethod
+    def validate_upload_table(cls, value: str) -> str:
+        if not _is_valid_identifier(value):
+            raise ValueError("table must be a valid SQL-style identifier")
+        return value
+
+
+class ModelFeedCommandResponse(BaseModel):
+    command: list[str]
+    return_code: int
+    stdout: str
+    stderr: str

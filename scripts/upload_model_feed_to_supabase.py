@@ -112,12 +112,13 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     """Load the weekly feed CSV and upsert it into the Supabase table."""
     args = parse_args()
+    load_dotenv(ROOT / "backend" / ".env")
     load_dotenv(ROOT / ".env")
 
     supabase_url = os.environ.get("SUPABASE_URL")
-    service_role_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    service_role_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_KEY")
     if not supabase_url or not service_role_key:
-        raise SystemExit("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env")
+        raise SystemExit("Missing SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or SUPABASE_KEY in .env/backend/.env")
 
     feed_path = Path(args.feed)
     if not feed_path.exists():
