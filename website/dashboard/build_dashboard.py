@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -725,28 +727,86 @@ def build_models(df: pd.DataFrame):
     return rf_pipe, xgb_pipe, features, rf_metrics, xgb_metrics
 
 
+def _load_env(path: Path) -> None:
+    if not path.exists():
+        return
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
+
+
+def fetch_model_feed_from_supabase() -> pd.DataFrame | None:
+    _load_env(ROOT.parent / "backend" / ".env")
+    supabase_url = os.environ.get("SUPABASE_URL")
+    supabase_key = os.environ.get("SUPABASE_KEY")
+    if not supabase_url or not supabase_key:
+        return None
+    endpoint = (
+        f"{supabase_url.rstrip('/')}/rest/v1/hab_model_feed"
+        "?select=*&order=week_start.desc&limit=10000"
+    )
+    req = urllib.request.Request(
+        endpoint,
+        headers={
+            "apikey": supabase_key,
+            "Authorization": f"Bearer {supabase_key}",
+            "Accept": "application/json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            records = json.loads(resp.read())
+        if not records:
+            return None
+        df = pd.DataFrame(records)
+        if "isharmful" in df.columns and "isHarmful" not in df.columns:
+            df = df.rename(columns={"isharmful": "isHarmful"})
+        df["week_start"] = pd.to_datetime(df["week_start"])
+        df["station_id"] = df["station_id"].astype(str)
+        return df
+    except Exception as exc:
+        print(f"  [supabase] Could not fetch: {exc}")
+        return None
+
+
 def build_dashboard() -> None:
-    # Try the merged path first, fall back to root-level file
-    data_path = DATA_PATH if DATA_PATH.exists() else ROOT / "hab_ndbc_merged.csv"
-    if not data_path.exists():
-        raise FileNotFoundError(f"Dataset not found at {DATA_PATH} or {ROOT / 'hab_ndbc_merged.csv'}")
+    candidates = [
+        DATA_PATH,
+        ROOT / "hab_ndbc_merged.csv",
+        ROOT.parent / "hab_ndbc_merged.csv",
+    ]
+    data_path = next((p for p in candidates if p.exists()), None)
+    if data_path is None:
+        raise FileNotFoundError(f"Dataset not found. Tried: {candidates}")
 
     df = pd.read_csv(data_path, parse_dates=["week_start", "sample_date"])
     df["station_id"] = df["station_id"].astype(str)
 
     rf_model, xgb_model, features, rf_metrics, xgb_metrics = build_models(df)
 
-    # Latest row per station
+    # Use live Supabase feed for predictions; fall back to tail of training data
+    feed_df = fetch_model_feed_from_supabase()
+    if feed_df is not None and not feed_df.empty:
+        print(f"  [supabase] Using live feed ({len(feed_df)} rows)")
+        source = feed_df
+    else:
+        print("  [supabase] Unavailable — falling back to training data")
+        source = df
+
     latest = (
-        df.sort_values(["station", "week_start"])
+        source.sort_values(["station", "week_start"])
         .groupby("station", as_index=False)
         .tail(1)
         .sort_values("station")
         .copy()
     )
 
-    rf_probas  = rf_model.predict_proba(latest[features])[:, 1]
-    xgb_probas = xgb_model.predict_proba(latest[features])[:, 1]
+    available_features = [f for f in features if f in latest.columns]
+    rf_probas  = rf_model.predict_proba(latest[available_features])[:, 1]
+    xgb_probas = xgb_model.predict_proba(latest[available_features])[:, 1]
     latest["rf_probability"]  = rf_probas
     latest["xgb_probability"] = xgb_probas
 
