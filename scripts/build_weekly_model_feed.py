@@ -23,6 +23,8 @@ FEED_DIR = PROCESSED_DIR / "model_feed"
 CALHABMAP_BASE_URL = "https://erddap.sccoos.org/erddap/tabledap"
 OISST_BASE_URL = "https://www.ncei.noaa.gov/data/sea-surface-temperature-optimum-interpolation/v2.1/access/avhrr"
 NDBC_BASE_URL = "https://www.ndbc.noaa.gov/data/realtime2"
+DEFAULT_LOOKBACK_DAYS = 90
+CALHABMAP_FALLBACK_START_DATE = dt.date(2025, 1, 1)
 
 CALHABMAP_COLUMNS = [
     "Location_Code",
@@ -536,6 +538,11 @@ def parse_args() -> argparse.Namespace:
     """Read command-line options for date range, cache mode, and output path."""
     parser = argparse.ArgumentParser(description="Download weekly HAB/OISST/NDBC data and build model feed rows.")
     parser.add_argument("--start-date", default=None, help="Fetch CalHABMAP rows from this date, YYYY-MM-DD.")
+    parser.add_argument(
+        "--fallback-start-date",
+        default=str(CALHABMAP_FALLBACK_START_DATE),
+        help="Older YYYY-MM-DD date to retry when the recent CalHABMAP window has no rows.",
+    )
     parser.add_argument("--use-existing", action="store_true", help="Use cached/raw or processed files instead of downloading.")
     parser.add_argument("--output", default=str(FEED_DIR / "weekly_model_feed.csv"), help="Output CSV path.")
     return parser.parse_args()
@@ -545,12 +552,20 @@ def main() -> None:
     """Run the full weekly pipeline and write both full and latest feed CSVs."""
     args = parse_args()
     today = dt.date.today()
-    start_date = dt.date.fromisoformat(args.start_date) if args.start_date else today - dt.timedelta(days=90)
+    start_date = dt.date.fromisoformat(args.start_date) if args.start_date else today - dt.timedelta(days=DEFAULT_LOOKBACK_DAYS)
+    fallback_start_date = dt.date.fromisoformat(args.fallback_start_date)
 
     FEED_DIR.mkdir(parents=True, exist_ok=True)
     calhab = fetch_calhabmap(start_date, use_existing=args.use_existing)
     if calhab.empty:
-        raise SystemExit("No CalHABMAP rows were available for the requested date range.")
+        if fallback_start_date < start_date:
+            print(
+                "No CalHABMAP rows were available for the recent date range. "
+                f"Retrying from {fallback_start_date} so stale stations can be skipped instead of failing the workflow."
+            )
+            calhab = fetch_calhabmap(fallback_start_date, use_existing=args.use_existing)
+        if calhab.empty:
+            raise SystemExit("No CalHABMAP rows were available for the requested or fallback date range.")
 
     oisst = build_oisst_weekly(calhab, use_existing=args.use_existing)
     ndbc = fetch_ndbc(use_existing=args.use_existing)
