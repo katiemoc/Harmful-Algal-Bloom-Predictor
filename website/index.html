@@ -262,9 +262,22 @@
 
     .stakes-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 24px;
-      max-width: 1100px;
+      grid-template-columns: repeat(3, minmax(260px, 1fr));
+      gap: 28px;
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+
+    .stakes .section-eyebrow {
+      max-width: 1320px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    @media (max-width: 900px) {
+      .stakes-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .stake-card {
@@ -331,6 +344,7 @@
 
     .how-inner {
       max-width: 1100px;
+      margin: 0 auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: clamp(40px, 6vw, 80px);
@@ -544,6 +558,7 @@
 
     .models-inner {
       max-width: 1100px;
+      margin: 0 auto;
     }
 
     .section-heading {
@@ -565,8 +580,15 @@
 
     .models-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(2, minmax(280px, 420px));
+      gap: 24px;
+      justify-content: center;
+    }
+
+    @media (max-width: 800px) {
+      .models-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .model-card {
@@ -810,9 +832,10 @@
   <nav class="nav" id="nav">
     <a href="#" class="nav-logo">HAB Predictor</a>
     <ul class="nav-links">
-      <li><a href="#how">How it works</a></li>
+      <li><a href="#stakes">Why It Matters</a></li>
+      <li><a href="#how">Methodology</a></li>
       <li><a href="#models">Models</a></li>
-      <li><a href="#data">Data</a></li>
+      <li><a href="#snapshot">Snapshot</a></li>
       <li><a href="../dashboard/site/index.html" class="nav-cta">Risk dashboard →</a></li>
     </ul>
   </nav>
@@ -866,7 +889,7 @@
   </section>
 
   <!-- ── STAKES ─────────────────────────────────────────── -->
-  <section class="stakes" id="data">
+  <section class="stakes" id="stakes">
     <p class="section-eyebrow">Why it matters</p>
     <div class="stakes-grid">
       <div class="stake-card js-reveal">
@@ -1067,7 +1090,7 @@
   </section>
 
   <!-- ── THRESHOLD CTA ──────────────────────────────────── -->
-  <section class="threshold">
+  <section class="threshold" id="snapshot">
     <!-- background map silhouette -->
     <div class="threshold-map-bg" aria-hidden="true">
       <svg viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg" style="height:90%;opacity:0.8;">
@@ -1092,11 +1115,11 @@
       <p class="threshold-eyebrow">Latest dataset snapshot</p>
       <h2 class="threshold-headline">Model-estimated risk.</h2>
       <div class="threshold-data">
-        10 CalHABMAP-linked station locations along the California coast<br>
-        <span class="t-high">2 high-risk model estimates in the displayed dataset snapshot</span><br>
-        <span class="t-low">4 low-risk model estimates</span><br>
-        4 elevated model estimates<br>
-        Latest available dataset week: 2026-03-23
+        <span id="snapshot-station-count">10</span> CalHABMAP-linked station locations along the California coast<br>
+        <span class="t-high"><span id="snapshot-high-count">2</span> high-risk model estimates in the displayed dataset snapshot</span><br>
+        <span class="t-low"><span id="snapshot-low-count">4</span> low-risk model estimates</span><br>
+        <span id="snapshot-medium-count">4</span> elevated model estimates<br>
+        Latest available dataset week: <span id="snapshot-latest-week">2026-03-23</span>
       </div>
       <p class="threshold-sub">
         The dashboard shows model-estimated harmful bloom risk for the latest available station-weeks in the dataset.
@@ -1114,10 +1137,27 @@
     <div>
       <p class="footer-col-label">Data sources</p>
       <p class="footer-col-body">
-        NOAA NDBC Buoy Network<br>
-        CalHABMAP Monitoring Program<br>
-        CDPH Shellfish Safety Program<br>
-        NOAA CoastWatch OISST
+        <a href="https://www.ndbc.noaa.gov/" target="_blank" rel="noopener noreferrer">
+          NOAA NDBC Buoy Network
+        </a><br>
+
+        <a href="https://calhabmap.org/datasites" target="_blank" rel="noopener noreferrer">
+          CalHABMAP Monitoring Program
+        </a><br>
+
+        <a href="https://www.cdph.ca.gov/Programs/CEH/DRSEM/pages/emb/shellfish/marine-biotoxin-monitoring-program.aspx"
+          target="_blank" rel="noopener noreferrer">
+          CDPH Marine Biotoxin Monitoring Program
+        </a><br>
+
+        <a href="https://www.ncei.noaa.gov/products/optimum-interpolation-sst" target="_blank"
+          rel="noopener noreferrer">
+          NOAA CoastWatch OISST
+        </a><br>
+
+        <a href="https://www.ncei.noaa.gov/erddap/tabledap/bedi_PMN.html" target="_blank" rel="noopener noreferrer">
+          NOAA NCCOS Phytoplankton Monitoring Network
+        </a>
       </p>
     </div>
     <div>
@@ -1141,10 +1181,12 @@
     <div>
       <p class="footer-col-label">Project</p>
       <p class="footer-col-body">
-        <a href="https://github.com">GitHub repository</a><br>
-        <a href="#models">Methodology</a><br>
-        <a href="../dashboard/site/index.html">Risk dashboard</a><br>
-        Research project — not a public health advisory
+        <a href="https://github.com/katiemoc/Harmful-Algal-Bloom-Predictor" target="_blank">GitHub Repository</a><br>
+        <a href="#stakes">Why It Matters</a><br>
+        <a href="#how">Methodology</a><br>
+        <a href="#models">Models</a><br>
+        <a href="#snapshot">Snapshot</a><br>
+        <a href="dashboard/site/index.html">Risk Dashboard</a><br>
       </p>
     </div>
   </footer>
@@ -1226,20 +1268,72 @@
 
     // Hero stat count-up
     const statEl = document.getElementById('stat-text');
-    const finalText = '2 HIGH-RISK STATIONS THIS WEEK — UPDATED 6H AGO';
-    let frame = 0;
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ·—';
-    const scramble = setInterval(() => {
-      frame++;
-      if (frame > 18) {
-        statEl.textContent = finalText;
-        clearInterval(scramble);
-        return;
+
+    function scrambleHeroStat(finalText) {
+      let frame = 0;
+      const scramble = setInterval(() => {
+        frame++;
+        if (frame > 18) {
+          statEl.textContent = finalText;
+          clearInterval(scramble);
+          return;
+        }
+        const revealed = Math.floor((frame / 18) * finalText.length);
+        statEl.textContent = finalText.slice(0, revealed) +
+          finalText.slice(revealed).replace(/[^ ]/g, () => chars[Math.floor(Math.random() * chars.length)]);
+      }, 60);
+    }
+
+    function updateSnapshot(summary) {
+      if (!summary) return;
+
+      const stationCount = Number(summary.station_count ?? 0);
+      const highCount = Number(summary.high_count ?? 0);
+      const mediumCount = Number(summary.medium_count ?? 0);
+      const lowCount = Number(summary.low_count ?? 0);
+      const latestWeek = summary.latest_update || 'unknown';
+
+      document.getElementById('snapshot-station-count').textContent = stationCount;
+      document.getElementById('snapshot-high-count').textContent = highCount;
+      document.getElementById('snapshot-medium-count').textContent = mediumCount;
+      document.getElementById('snapshot-low-count').textContent = lowCount;
+      document.getElementById('snapshot-latest-week').textContent = latestWeek;
+
+      const label = highCount === 1 ? 'HIGH-RISK STATION' : 'HIGH-RISK STATIONS';
+      scrambleHeroStat(`${highCount} ${label} IN LATEST DATASET — WEEK ${latestWeek}`);
+    }
+
+    async function loadDashboardSnapshot() {
+      const dashboardPaths = [
+        './dashboard/site/index.html',
+        '../dashboard/site/index.html',
+        '/website/dashboard/site/index.html',
+        '/dashboard/site/index.html',
+      ];
+
+      for (const path of dashboardPaths) {
+        try {
+          const response = await fetch(path, { cache: 'no-store' });
+          if (!response.ok) continue;
+
+          const html = await response.text();
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          const dataEl = doc.getElementById('dashboard-data');
+          if (!dataEl) continue;
+
+          const dashboardData = JSON.parse(dataEl.textContent);
+          updateSnapshot(dashboardData.summary);
+          return;
+        } catch (error) {
+          console.warn(`Could not load dashboard snapshot from ${path}.`, error);
+        }
       }
-      const revealed = Math.floor((frame / 18) * finalText.length);
-      statEl.textContent = finalText.slice(0, revealed) +
-        finalText.slice(revealed).replace(/[^ ]/g, () => chars[Math.floor(Math.random() * chars.length)]);
-    }, 60);
+
+      scrambleHeroStat('2 HIGH-RISK STATIONS IN LATEST DATASET — WEEK 2026-03-23');
+    }
+
+    loadDashboardSnapshot();
 
     // Scroll reveal for stake cards
     const observer = new IntersectionObserver((entries) => {

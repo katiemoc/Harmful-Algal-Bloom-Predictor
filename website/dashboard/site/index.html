@@ -1,6 +1,6 @@
+
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,9 +9,7 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,200..700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,200..700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -19,886 +17,203 @@
 
   <style>
     :root {
-      --void: #0b1920;
-      --navy: #10202a;
-      --grid: #1e3340;
-      --hero-text: #e8ece8;
+      --void:       #0b1920;
+      --navy:       #10202a;
+      --grid:       #1e3340;
+      --hero-text:  #e8ece8;
       --muted-dark: #8fa3ad;
-      --water: #dceff4;
-      --panel: #ffffff;
-      --ink: #10202a;
-      --muted: #5d6b73;
-      --line: #d9e2e7;
-      --bg: #f7fafb;
-      --teal: #1b8fa8;
-      --low: #2f8f68;
-      --medium: #c4881a;
-      --high: #c63d3d;
-      --high-glow: rgba(198, 61, 61, 0.18);
-      --shadow: 0 2px 12px rgba(16, 32, 42, 0.08);
-      --shadow-lg: 0 8px 32px rgba(16, 32, 42, 0.14);
-      --topbar-h: 52px;
-      --sidebar-w: 390px;
+      --water:      #dceff4;
+      --panel:      #ffffff;
+      --ink:        #10202a;
+      --muted:      #5d6b73;
+      --line:       #d9e2e7;
+      --bg:         #f7fafb;
+      --teal:       #1b8fa8;
+      --low:        #2f8f68;
+      --medium:     #c4881a;
+      --high:       #c63d3d;
+      --high-glow:  rgba(198,61,61,0.18);
+      --shadow:     0 2px 12px rgba(16,32,42,0.08);
+      --shadow-lg:  0 8px 32px rgba(16,32,42,0.14);
+      --topbar-h:   52px;
+      --sidebar-w:  390px;
     }
 
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html,
-    body {
-      height: 100%;
-      overflow: hidden;
-      font-family: 'DM Sans', ui-sans-serif, sans-serif;
-      font-size: 14px;
-      color: var(--ink);
-      background: var(--bg);
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; font-family: 'DM Sans', ui-sans-serif, sans-serif; font-size: 14px; color: var(--ink); background: var(--bg); }
 
     /* ── TOPBAR ── */
     .topbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      position: fixed; top: 0; left: 0; right: 0;
       height: var(--topbar-h);
       background: var(--navy);
       border-bottom: 1px solid var(--grid);
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      z-index: 1000;
+      display: flex; align-items: center; padding: 0 20px; z-index: 1000;
     }
-
     .topbar-back {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--muted-dark);
-      text-decoration: none;
-      padding-right: 14px;
-      margin-right: 16px;
-      border-right: 1px solid var(--grid);
-      height: 100%;
-      transition: color 0.15s;
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted-dark);
+      text-decoration: none; padding-right: 14px; margin-right: 16px;
+      border-right: 1px solid var(--grid); height: 100%; transition: color 0.15s;
     }
-
-    .topbar-back:hover {
-      color: var(--water);
-    }
-
-    .topbar-logo {
-      font-family: 'Fraunces', serif;
-      font-size: 16px;
-      font-weight: 500;
-      color: var(--hero-text);
-    }
-
+    .topbar-back:hover { color: var(--water); }
+    .topbar-logo { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 500; color: var(--hero-text); }
     .topbar-sub {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--muted-dark);
-      margin-left: 12px;
-      padding-left: 12px;
-      border-left: 1px solid var(--grid);
-      letter-spacing: 0.04em;
+      font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted-dark);
+      margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--grid); letter-spacing: 0.04em;
     }
-
-    .topbar-right {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .topbar-update {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--muted-dark);
-      letter-spacing: 0.04em;
-    }
-
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .topbar-update { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted-dark); letter-spacing: 0.04em; }
     .topbar-alert {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(198, 61, 61, 0.15);
-      border: 1px solid rgba(198, 61, 61, 0.3);
-      border-radius: 4px;
-      padding: 4px 10px;
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: #f08080;
-      letter-spacing: 0.04em;
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(198,61,61,0.15); border: 1px solid rgba(198,61,61,0.3);
+      border-radius: 4px; padding: 4px 10px;
+      font-family: 'DM Mono', monospace; font-size: 10px; color: #f08080; letter-spacing: 0.04em;
     }
-
     .alert-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--high);
+      width: 6px; height: 6px; border-radius: 50%; background: var(--high);
       animation: blink 2s ease-in-out infinite;
     }
-
-    @keyframes blink {
-
-      0%,
-      100% {
-        opacity: 1
-      }
-
-      50% {
-        opacity: 0.4
-      }
-    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
     /* ── LAYOUT ── */
-    .app {
-      position: fixed;
-      top: var(--topbar-h);
-      left: 0;
-      right: 0;
-      bottom: 0;
-      display: flex;
-    }
-
-    #map {
-      flex: 1;
-      height: 100%;
-    }
+    .app { position: fixed; top: var(--topbar-h); left: 0; right: 0; bottom: 0; display: flex; }
+    #map { flex: 1; height: 100%; }
 
     /* ── LEAFLET OVERRIDES ── */
-    .leaflet-control-zoom {
-      border: none !important;
-      border-radius: 8px !important;
-      overflow: hidden;
-      box-shadow: var(--shadow-lg) !important;
-    }
-
-    .leaflet-control-zoom a {
-      background: var(--navy) !important;
-      color: var(--hero-text) !important;
-      border: none !important;
-      font-family: 'DM Mono', monospace !important;
-      font-size: 16px !important;
-      width: 36px !important;
-      height: 36px !important;
-      line-height: 36px !important;
-      transition: background 0.15s;
-    }
-
-    .leaflet-control-zoom a:hover {
-      background: var(--grid) !important;
-      color: var(--water) !important;
-    }
-
-    .leaflet-control-attribution {
-      font-family: 'DM Mono', monospace !important;
-      font-size: 9px !important;
-      background: rgba(11, 25, 32, 0.7) !important;
-      color: #8fa3ad !important;
-      border-radius: 4px 0 0 0 !important;
-    }
-
-    .leaflet-control-attribution a {
-      color: var(--water) !important;
-    }
-
-    .leaflet-popup-content-wrapper {
-      background: var(--navy) !important;
-      border: 1px solid var(--grid) !important;
-      border-radius: 8px !important;
-      box-shadow: var(--shadow-lg) !important;
-      padding: 0 !important;
-    }
-
-    .leaflet-popup-content {
-      margin: 0 !important;
-      width: 248px !important;
-    }
-
-    .leaflet-popup-tip {
-      background: var(--navy) !important;
-    }
-
-    .leaflet-popup-close-button {
-      color: var(--muted-dark) !important;
-      font-size: 18px !important;
-      top: 8px !important;
-      right: 10px !important;
-    }
+    .leaflet-control-zoom { border: none !important; border-radius: 8px !important; overflow: hidden; box-shadow: var(--shadow-lg) !important; }
+    .leaflet-control-zoom a { background: var(--navy) !important; color: var(--hero-text) !important; border: none !important; font-family: 'DM Mono', monospace !important; font-size: 16px !important; width: 36px !important; height: 36px !important; line-height: 36px !important; transition: background 0.15s; }
+    .leaflet-control-zoom a:hover { background: var(--grid) !important; color: var(--water) !important; }
+    .leaflet-control-attribution { font-family: 'DM Mono', monospace !important; font-size: 9px !important; background: rgba(11,25,32,0.7) !important; color: #8fa3ad !important; border-radius: 4px 0 0 0 !important; }
+    .leaflet-control-attribution a { color: var(--water) !important; }
+    .leaflet-popup-content-wrapper { background: var(--navy) !important; border: 1px solid var(--grid) !important; border-radius: 8px !important; box-shadow: var(--shadow-lg) !important; padding: 0 !important; }
+    .leaflet-popup-content { margin: 0 !important; width: 248px !important; }
+    .leaflet-popup-tip { background: var(--navy) !important; }
+    .leaflet-popup-close-button { color: var(--muted-dark) !important; font-size: 18px !important; top: 8px !important; right: 10px !important; }
 
     /* Station dots */
-    .sdot {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      border: 2.5px solid white;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-      cursor: pointer;
-      transition: transform 0.15s;
-    }
-
-    .sdot.low {
-      background: var(--low);
-    }
-
-    .sdot.medium {
-      background: var(--medium);
-    }
-
-    .sdot.high {
-      background: var(--high);
-      box-shadow: 0 2px 12px rgba(198, 61, 61, 0.5);
-    }
-
-    .sdot.active {
-      transform: scale(1.5);
-      border-color: white;
-      z-index: 1000 !important;
-    }
-
-    .sdot.high.active {
-      box-shadow: 0 0 20px rgba(198, 61, 61, 0.7);
-    }
+    .sdot { width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); cursor: pointer; transition: transform 0.15s; }
+    .sdot.low    { background: var(--low); }
+    .sdot.medium { background: var(--medium); }
+    .sdot.high   { background: var(--high); box-shadow: 0 2px 12px rgba(198,61,61,0.5); }
+    .sdot.active { transform: scale(1.5); border-color: white; z-index: 1000 !important; }
+    .sdot.high.active { box-shadow: 0 0 20px rgba(198,61,61,0.7); }
 
     /* Map overlays */
-    .map-overlay {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      z-index: 800;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      pointer-events: none;
-    }
-
+    .map-overlay { position: absolute; top: 12px; left: 12px; z-index: 800; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
     .map-chip {
-      background: rgba(11, 25, 32, 0.88);
-      backdrop-filter: blur(4px);
-      border: 1px solid var(--grid);
-      border-radius: 6px;
-      padding: 6px 12px;
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--muted-dark);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      background: rgba(11,25,32,0.88); backdrop-filter: blur(4px);
+      border: 1px solid var(--grid); border-radius: 6px;
+      padding: 6px 12px; font-family: 'DM Mono', monospace; font-size: 10px;
+      color: var(--muted-dark); letter-spacing: 0.08em; text-transform: uppercase;
     }
-
-    .map-legend {
-      background: rgba(11, 25, 32, 0.88);
-      backdrop-filter: blur(4px);
-      border: 1px solid var(--grid);
-      border-radius: 6px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .legend-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--muted-dark);
-    }
-
-    .l-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      border: 1.5px solid rgba(255, 255, 255, 0.4);
-      flex-shrink: 0;
-    }
-
-    .l-dot.low {
-      background: var(--low);
-    }
-
-    .l-dot.medium {
-      background: var(--medium);
-    }
-
-    .l-dot.high {
-      background: var(--high);
-    }
+    .map-legend { background: rgba(11,25,32,0.88); backdrop-filter: blur(4px); border: 1px solid var(--grid); border-radius: 6px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+    .legend-row { display: flex; align-items: center; gap: 8px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted-dark); }
+    .l-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.4); flex-shrink: 0; }
+    .l-dot.low { background: var(--low); } .l-dot.medium { background: var(--medium); } .l-dot.high { background: var(--high); }
 
     /* ── SIDEBAR ── */
-    .sidebar {
-      width: var(--sidebar-w);
-      flex-shrink: 0;
-      height: 100%;
-      background: var(--panel);
-      border-left: 1px solid var(--line);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: -4px 0 16px rgba(16, 32, 42, 0.06);
-    }
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; height: 100%; background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; overflow: hidden; box-shadow: -4px 0 16px rgba(16,32,42,0.06); }
 
     /* Metrics strip */
-    .metrics-strip {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      border-bottom: 1px solid var(--line);
-      flex-shrink: 0;
-    }
-
-    .metric-cell {
-      padding: 14px 12px;
-      border-right: 1px solid var(--line);
-    }
-
-    .metric-cell:last-child {
-      border-right: none;
-    }
-
-    .metric-val {
-      font-family: 'Fraunces', serif;
-      font-size: 26px;
-      font-weight: 600;
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-
-    .metric-val.danger {
-      color: var(--high);
-    }
-
-    .metric-val.caution {
-      color: var(--medium);
-    }
-
-    .metric-val.ok {
-      color: var(--low);
-    }
-
-    .metric-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      line-height: 1.3;
-    }
+    .metrics-strip { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); flex-shrink: 0; }
+    .metric-cell { padding: 14px 12px; border-right: 1px solid var(--line); }
+    .metric-cell:last-child { border-right: none; }
+    .metric-val { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 600; line-height: 1; margin-bottom: 4px; }
+    .metric-val.danger { color: var(--high); } .metric-val.caution { color: var(--medium); } .metric-val.ok { color: var(--low); }
+    .metric-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); line-height: 1.3; }
 
     /* Model toggle */
-    .model-toggle {
-      display: flex;
-      align-items: center;
-      padding: 8px 16px;
-      border-bottom: 1px solid var(--line);
-      gap: 8px;
-      flex-shrink: 0;
-      background: var(--bg);
-    }
-
-    .toggle-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.06em;
-      margin-right: 4px;
-    }
-
+    .model-toggle { display: flex; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--line); gap: 8px; flex-shrink: 0; background: var(--bg); }
+    .toggle-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.06em; margin-right: 4px; }
     .toggle-btn {
-      padding: 5px 12px;
-      border-radius: 4px;
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 0.06em;
-      cursor: pointer;
-      border: 1px solid var(--line);
-      background: transparent;
-      color: var(--muted);
-      transition: all 0.15s;
+      padding: 5px 12px; border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 10px;
+      letter-spacing: 0.06em; cursor: pointer; border: 1px solid var(--line);
+      background: transparent; color: var(--muted); transition: all 0.15s;
     }
-
-    .toggle-btn.active {
-      background: var(--navy);
-      color: var(--hero-text);
-      border-color: var(--navy);
-    }
-
-    .toggle-btn:hover:not(.active) {
-      border-color: var(--teal);
-      color: var(--teal);
-    }
+    .toggle-btn.active { background: var(--navy); color: var(--hero-text); border-color: var(--navy); }
+    .toggle-btn:hover:not(.active) { border-color: var(--teal); color: var(--teal); }
 
     /* Filter tabs */
-    .filter-bar {
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      border-bottom: 1px solid var(--line);
-      flex-shrink: 0;
-    }
-
-    .filter-tab {
-      padding: 10px 12px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 0.06em;
-      color: var(--muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.15s;
-      background: none;
-      border-top: none;
-      border-left: none;
-      border-right: none;
-    }
-
-    .filter-tab:hover {
-      color: var(--ink);
-    }
-
-    .filter-tab.active {
-      color: var(--teal);
-      border-bottom-color: var(--teal);
-    }
-
-    .filter-tab.f-high.active {
-      color: var(--high);
-      border-bottom-color: var(--high);
-    }
-
-    .filter-tab.f-medium.active {
-      color: var(--medium);
-      border-bottom-color: var(--medium);
-    }
-
-    .fcnt {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 15px;
-      height: 15px;
-      border-radius: 3px;
-      font-size: 9px;
-      margin-left: 4px;
-      font-weight: 600;
-    }
-
-    .filter-tab.active .fcnt {
-      background: rgba(27, 143, 168, 0.12);
-      color: var(--teal);
-    }
-
-    .filter-tab.f-high.active .fcnt {
-      background: rgba(198, 61, 61, 0.12);
-      color: var(--high);
-    }
-
-    .filter-tab.f-medium.active .fcnt {
-      background: rgba(196, 136, 26, 0.12);
-      color: var(--medium);
-    }
+    .filter-bar { display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+    .filter-tab { padding: 10px 12px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; background: none; border-top: none; border-left: none; border-right: none; }
+    .filter-tab:hover { color: var(--ink); }
+    .filter-tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+    .filter-tab.f-high.active { color: var(--high); border-bottom-color: var(--high); }
+    .filter-tab.f-medium.active { color: var(--medium); border-bottom-color: var(--medium); }
+    .fcnt { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 3px; font-size: 9px; margin-left: 4px; font-weight: 600; }
+    .filter-tab.active .fcnt { background: rgba(27,143,168,0.12); color: var(--teal); }
+    .filter-tab.f-high.active .fcnt { background: rgba(198,61,61,0.12); color: var(--high); }
+    .filter-tab.f-medium.active .fcnt { background: rgba(196,136,26,0.12); color: var(--medium); }
 
     /* Station list */
-    .station-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-    }
-
-    .station-list::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    .station-list::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .station-list::-webkit-scrollbar-thumb {
-      background: var(--line);
-      border-radius: 2px;
-    }
+    .station-list { flex: 1; overflow-y: auto; padding: 12px; }
+    .station-list::-webkit-scrollbar { width: 4px; }
+    .station-list::-webkit-scrollbar-track { background: transparent; }
+    .station-list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
 
     /* Station cards */
-    .scard {
-      border: 1px solid var(--line);
-      border-left: 4px solid transparent;
-      border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 8px;
-      background: white;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .scard:hover {
-      box-shadow: var(--shadow);
-    }
-
-    .scard.active {
-      background: #f4f8fa;
-      box-shadow: var(--shadow-lg);
-    }
-
-    .scard.low {
-      border-left-color: var(--low);
-    }
-
-    .scard.medium {
-      border-left-color: var(--medium);
-    }
-
-    .scard.high {
-      border-left-color: var(--high);
-    }
-
-    .scard.active.high {
-      background: rgba(198, 61, 61, 0.03);
-    }
-
-    .card-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-
-    .card-name {
-      font-weight: 600;
-      font-size: 14px;
-      color: var(--ink);
-      line-height: 1.2;
-    }
-
-    .card-meta {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 3px;
-    }
-
-    .card-risk {
-      text-align: right;
-      flex-shrink: 0;
-      margin-left: 10px;
-    }
-
-    .card-pct {
-      font-family: 'Fraunces', serif;
-      font-size: 24px;
-      font-weight: 700;
-      line-height: 1;
-    }
-
-    .card-pct.low {
-      color: var(--low);
-    }
-
-    .card-pct.medium {
-      color: var(--medium);
-    }
-
-    .card-pct.high {
-      color: var(--high);
-    }
-
-    .card-rlabel {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    .card-rlabel.low {
-      color: var(--low);
-    }
-
-    .card-rlabel.medium {
-      color: var(--medium);
-    }
-
-    .card-rlabel.high {
-      color: var(--high);
-    }
-
-    .card-features {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      padding-top: 10px;
-      border-top: 1px solid var(--line);
-    }
-
-    .feat {
-      background: var(--bg);
-      border-radius: 4px;
-      padding: 6px 8px;
-    }
-
-    .feat-val {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--ink);
-    }
-
-    .feat-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      color: var(--muted);
-      letter-spacing: 0.04em;
-      margin-top: 2px;
-    }
+    .scard { border: 1px solid var(--line); border-left: 4px solid transparent; border-radius: 8px; padding: 14px; margin-bottom: 8px; background: white; cursor: pointer; transition: all 0.15s; }
+    .scard:hover { box-shadow: var(--shadow); }
+    .scard.active { background: #f4f8fa; box-shadow: var(--shadow-lg); }
+    .scard.low { border-left-color: var(--low); } .scard.medium { border-left-color: var(--medium); } .scard.high { border-left-color: var(--high); }
+    .scard.active.high { background: rgba(198,61,61,0.03); }
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+    .card-name { font-weight: 600; font-size: 14px; color: var(--ink); line-height: 1.2; }
+    .card-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 3px; }
+    .card-risk { text-align: right; flex-shrink: 0; margin-left: 10px; }
+    .card-pct { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 700; line-height: 1; }
+    .card-pct.low { color: var(--low); } .card-pct.medium { color: var(--medium); } .card-pct.high { color: var(--high); }
+    .card-rlabel { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
+    .card-rlabel.low { color: var(--low); } .card-rlabel.medium { color: var(--medium); } .card-rlabel.high { color: var(--high); }
+    .card-features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
+    .feat { background: var(--bg); border-radius: 4px; padding: 6px 8px; }
+    .feat-val { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; color: var(--ink); }
+    .feat-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 0.04em; margin-top: 2px; }
 
     /* Comparison row (shown when both models active) */
-    .model-compare {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid var(--line);
-    }
-
-    .mc-item {
-      flex: 1;
-      background: var(--bg);
-      border-radius: 4px;
-      padding: 6px 8px;
-    }
-
-    .mc-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      color: var(--muted);
-      letter-spacing: 0.04em;
-    }
-
-    .mc-val {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      font-weight: 500;
-      margin-top: 2px;
-    }
-
-    .mc-val.low {
-      color: var(--low);
-    }
-
-    .mc-val.medium {
-      color: var(--medium);
-    }
-
-    .mc-val.high {
-      color: var(--high);
-    }
+    .model-compare { display: flex; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+    .mc-item { flex: 1; background: var(--bg); border-radius: 4px; padding: 6px 8px; }
+    .mc-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 0.04em; }
+    .mc-val { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; margin-top: 2px; }
+    .mc-val.low { color: var(--low); } .mc-val.medium { color: var(--medium); } .mc-val.high { color: var(--high); }
 
     /* Model performance panel */
-    .model-panel {
-      border-top: 1px solid var(--line);
-      padding: 14px 16px;
-      flex-shrink: 0;
-      background: var(--bg);
-    }
-
-    .mp-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-
-    .mp-title {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .mp-badge {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      color: var(--teal);
-      background: rgba(27, 143, 168, 0.08);
-      border: 1px solid rgba(27, 143, 168, 0.2);
-      border-radius: 4px;
-      padding: 2px 7px;
-    }
-
-    .mp-metrics {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-
-    .mp-metric {
-      text-align: center;
-    }
-
-    .mp-val {
-      font-family: 'DM Mono', monospace;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--ink);
-    }
-
-    .mp-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-top: 2px;
-    }
+    .model-panel { border-top: 1px solid var(--line); padding: 14px 16px; flex-shrink: 0; background: var(--bg); }
+    .mp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .mp-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .mp-badge { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--teal); background: rgba(27,143,168,0.08); border: 1px solid rgba(27,143,168,0.2); border-radius: 4px; padding: 2px 7px; }
+    .mp-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .mp-metric { text-align: center; }
+    .mp-val { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--ink); }
+    .mp-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
 
     /* Popup */
-    .pu-inner {
-      padding: 16px;
-    }
+    .pu-inner { padding: 16px; }
+    .pu-name { font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 13px; color: var(--hero-text); margin-bottom: 4px; }
+    .pu-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted-dark); margin-bottom: 12px; }
+    .pu-risk { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--grid); }
+    .pu-pct { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 700; line-height: 1; }
+    .pu-pct.low { color: var(--low); } .pu-pct.medium { color: var(--medium); } .pu-pct.high { color: var(--high); }
+    .pu-rlabel { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .pu-rlabel.low { color: var(--low); } .pu-rlabel.medium { color: var(--medium); } .pu-rlabel.high { color: var(--high); }
+    .pu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .pu-val { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--hero-text); }
+    .pu-label { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted-dark); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+    .pu-compare { display: flex; gap: 8px; padding-top: 10px; border-top: 1px solid var(--grid); }
+    .pu-citem { flex: 1; }
+    .pu-cval { font-family: 'DM Mono', monospace; font-size: 11px; }
+    .pu-cval.low { color: var(--low); } .pu-cval.medium { color: var(--medium); } .pu-cval.high { color: var(--high); }
+    .pu-clabel { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted-dark); margin-top: 2px; }
 
-    .pu-name {
-      font-family: 'DM Sans', sans-serif;
-      font-weight: 600;
-      font-size: 13px;
-      color: var(--hero-text);
-      margin-bottom: 4px;
-    }
-
-    .pu-meta {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--muted-dark);
-      margin-bottom: 12px;
-    }
-
-    .pu-risk {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin-bottom: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--grid);
-    }
-
-    .pu-pct {
-      font-family: 'Fraunces', serif;
-      font-size: 32px;
-      font-weight: 700;
-      line-height: 1;
-    }
-
-    .pu-pct.low {
-      color: var(--low);
-    }
-
-    .pu-pct.medium {
-      color: var(--medium);
-    }
-
-    .pu-pct.high {
-      color: var(--high);
-    }
-
-    .pu-rlabel {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
-    .pu-rlabel.low {
-      color: var(--low);
-    }
-
-    .pu-rlabel.medium {
-      color: var(--medium);
-    }
-
-    .pu-rlabel.high {
-      color: var(--high);
-    }
-
-    .pu-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .pu-val {
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-      color: var(--hero-text);
-    }
-
-    .pu-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      color: var(--muted-dark);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-top: 2px;
-    }
-
-    .pu-compare {
-      display: flex;
-      gap: 8px;
-      padding-top: 10px;
-      border-top: 1px solid var(--grid);
-    }
-
-    .pu-citem {
-      flex: 1;
-    }
-
-    .pu-cval {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-    }
-
-    .pu-cval.low {
-      color: var(--low);
-    }
-
-    .pu-cval.medium {
-      color: var(--medium);
-    }
-
-    .pu-cval.high {
-      color: var(--high);
-    }
-
-    .pu-clabel {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      color: var(--muted-dark);
-      margin-top: 2px;
-    }
-
-    .notice {
-      padding: 10px 16px;
-      border-top: 1px solid var(--line);
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--muted);
-      line-height: 1.6;
-      flex-shrink: 0;
-    }
+    .notice { padding: 10px 16px; border-top: 1px solid var(--line); font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); line-height: 1.6; flex-shrink: 0; }
   </style>
 </head>
-
 <body>
 
   <!-- TOPBAR -->
   <header class="topbar">
-    <a href="../../index.html" class="topbar-back">← Overview</a>
+    <a href="../../website/index.html" class="topbar-back">← Overview</a>
     <span class="topbar-logo">HAB Predictor</span>
     <span class="topbar-sub">California Coastal Risk Dashboard</span>
     <div class="topbar-right">
@@ -908,7 +223,7 @@
         <div class="alert-dot"></div>
         <span id="topbar-alert-text">2 HIGH-RISK ESTIMATES</span>
       </div>
-
+      
     </div>
   </header>
 
@@ -919,15 +234,9 @@
       <div class="map-overlay">
         <div class="map-chip" id="map-chip">10 CalHABMAP-linked station locations</div>
         <div class="map-legend">
-          <div class="legend-row">
-            <div class="l-dot high"></div>High risk
-          </div>
-          <div class="legend-row">
-            <div class="l-dot medium"></div>Elevated
-          </div>
-          <div class="legend-row">
-            <div class="l-dot low"></div>Low risk
-          </div>
+          <div class="legend-row"><div class="l-dot high"></div>High risk</div>
+          <div class="legend-row"><div class="l-dot medium"></div>Elevated</div>
+          <div class="legend-row"><div class="l-dot low"></div>Low risk</div>
         </div>
       </div>
     </div>
@@ -965,14 +274,10 @@
 
       <!-- Filter tabs -->
       <div class="filter-bar">
-        <button class="filter-tab active" onclick="filterStations('all',this)">All<span class="fcnt"
-            id="cnt-all">10</span></button>
-        <button class="filter-tab f-high" onclick="filterStations('high',this)">High<span class="fcnt"
-            id="cnt-high">2</span></button>
-        <button class="filter-tab f-medium" onclick="filterStations('medium',this)">Elevated<span class="fcnt"
-            id="cnt-med">4</span></button>
-        <button class="filter-tab" onclick="filterStations('low',this)">Low<span class="fcnt"
-            id="cnt-low">4</span></button>
+        <button class="filter-tab active" onclick="filterStations('all',this)">All<span class="fcnt" id="cnt-all">10</span></button>
+        <button class="filter-tab f-high" onclick="filterStations('high',this)">High<span class="fcnt" id="cnt-high">2</span></button>
+        <button class="filter-tab f-medium" onclick="filterStations('medium',this)">Elevated<span class="fcnt" id="cnt-med">4</span></button>
+        <button class="filter-tab" onclick="filterStations('low',this)">Low<span class="fcnt" id="cnt-low">4</span></button>
       </div>
 
       <!-- Station list -->
@@ -985,36 +290,22 @@
           <span class="mp-badge" id="model-perf-badge">validation set</span>
         </div>
         <div class="mp-metrics" id="model-perf-metrics">
-          <div class="mp-metric">
-            <div class="mp-val">0.86</div>
-            <div class="mp-label">AUC-ROC</div>
-          </div>
-          <div class="mp-metric">
-            <div class="mp-val">0.50</div>
-            <div class="mp-label">F1</div>
-          </div>
-          <div class="mp-metric">
-            <div class="mp-val">0.53</div>
-            <div class="mp-label">Recall</div>
-          </div>
-          <div class="mp-metric">
-            <div class="mp-val">0.48</div>
-            <div class="mp-label">Precision</div>
-          </div>
+          <div class="mp-metric"><div class="mp-val">0.86</div><div class="mp-label">AUC-ROC</div></div>
+          <div class="mp-metric"><div class="mp-val">0.50</div><div class="mp-label">F1</div></div>
+          <div class="mp-metric"><div class="mp-val">0.53</div><div class="mp-label">Recall</div></div>
+          <div class="mp-metric"><div class="mp-val">0.48</div><div class="mp-label">Precision</div></div>
         </div>
       </div>
 
       <!-- Disclaimer -->
       <div class="notice">
-        Research demo — not a public health advisory. Risk levels are model-estimated from CalHABMAP-linked observations
-        and environmental features. Live updates would require automated OISST + NDBC data refresh.
+        Research demo — not a public health advisory. Risk levels are model-estimated from CalHABMAP-linked observations and environmental features. Live updates would require automated OISST + NDBC data refresh.
       </div>
 
     </aside>
   </div>
 
-  <script type="application/json"
-    id="dashboard-data">{"summary": {"station_count": 10, "high_count": 2, "medium_count": 4, "low_count": 4, "latest_update": "2026-03-23", "rf_threshold": 0.4336031533626914, "xgb_threshold": 0.0897357314825058, "rf_metrics": {"threshold": 0.4336031533626914, "accuracy": 0.8102893890675241, "balanced_accuracy": 0.7001657687525902, "f1": 0.5042016806722689, "recall": 0.5263157894736842, "precision": 0.4838709677419355, "roc_auc": 0.8613068103329189, "confusion_matrix": [[222, 32], [27, 30]]}, "xgb_metrics": {"threshold": 0.0897357314825058, "accuracy": 0.8102893890675241, "balanced_accuracy": 0.5777041027766265, "f1": 0.2891566265060241, "recall": 0.21052631578947367, "precision": 0.46153846153846156, "roc_auc": 0.8374084818345074, "confusion_matrix": [[240, 14], [45, 12]]}}, "stations": [{"id": "humboldt-south-bay", "station": "Humboldt South Bay", "week_start": "2024-08-26", "station_id": "NDBC-46022", "latitude": 40.72343, "longitude": -124.2234, "rf_probability": 0.8176, "xgb_probability": 0.995, "rf_risk_class": "high", "sst": "12.5 C", "ndbc_sst": "12.7 C", "wind": "2.9 m/s", "chloro": "2.7"}, {"id": "monterey-wharf", "station": "Monterey Wharf", "week_start": "2022-08-29", "station_id": "NDBC-46042", "latitude": 36.603683, "longitude": -121.889275, "rf_probability": 0.6642, "xgb_probability": 0.079, "rf_risk_class": "high", "sst": "14.5 C", "ndbc_sst": "14.3 C", "wind": "4.3 m/s", "chloro": "9.4"}, {"id": "cal-poly-pier", "station": "Cal Poly Pier", "week_start": "2026-03-02", "station_id": "NDBC-46011", "latitude": 35.170204, "longitude": -120.740685, "rf_probability": 0.3277, "xgb_probability": 0.0062, "rf_risk_class": "medium", "sst": "14.4 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "2.1"}, {"id": "humboldt", "station": "Humboldt", "week_start": "2026-01-12", "station_id": "NDBC-46022", "latitude": 40.77833, "longitude": -124.1967, "rf_probability": 0.2923, "xgb_probability": 0.0028, "rf_risk_class": "medium", "sst": "11.9 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "1.8"}, {"id": "stearns-wharf", "station": "Stearns Wharf", "week_start": "2026-03-02", "station_id": "NDBC-46053", "latitude": 34.408043, "longitude": -119.68485, "rf_probability": 0.288, "xgb_probability": 0.0032, "rf_risk_class": "medium", "sst": "15.1 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "6.1"}, {"id": "trinidad-pier", "station": "Trinidad Pier", "week_start": "2026-02-02", "station_id": "NDBC-46022", "latitude": 41.05495, "longitude": -124.14696, "rf_probability": 0.2776, "xgb_probability": 0.0026, "rf_risk_class": "medium", "sst": "11.9 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "2.0"}, {"id": "santa-cruz-wharf", "station": "Santa Cruz Wharf", "week_start": "2026-03-23", "station_id": "NDBC-46042", "latitude": 36.958, "longitude": -122.017, "rf_probability": 0.2152, "xgb_probability": 0.0028, "rf_risk_class": "low", "sst": "13.5 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "0.8"}, {"id": "scripps-pier", "station": "Scripps Pier", "week_start": "2026-03-02", "station_id": "NDBC-46086", "latitude": 32.867, "longitude": -117.257, "rf_probability": 0.1492, "xgb_probability": 0.021, "rf_risk_class": "low", "sst": "16.5 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "2.0"}, {"id": "newport-beach-pier", "station": "Newport Beach Pier", "week_start": "2026-03-23", "station_id": "NDBC-46025", "latitude": 33.6061, "longitude": -117.9311, "rf_probability": 0.1041, "xgb_probability": 0.0007, "rf_risk_class": "low", "sst": "17.5 C", "ndbc_sst": "17.7 C", "wind": "2.6 m/s", "chloro": "1.9"}, {"id": "santa-monica-pier", "station": "Santa Monica Pier", "week_start": "2026-03-02", "station_id": "NDBC-46025", "latitude": 34.008, "longitude": -118.499, "rf_probability": 0.1003, "xgb_probability": 0.0034, "rf_risk_class": "low", "sst": "15.8 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "0.8"}]}</script>
+  <script type="application/json" id="dashboard-data">{"summary": {"station_count": 10, "high_count": 2, "medium_count": 4, "low_count": 4, "latest_update": "2026-03-23", "rf_threshold": 0.4336229657474412, "xgb_threshold": 0.08102625608444214, "rf_metrics": {"threshold": 0.4336229657474412, "accuracy": 0.8102893890675241, "balanced_accuracy": 0.7001657687525902, "f1": 0.5042016806722689, "recall": 0.5263157894736842, "precision": 0.4838709677419355, "roc_auc": 0.8613068103329189, "confusion_matrix": [[222, 32], [27, 30]]}, "xgb_metrics": {"threshold": 0.08102625608444214, "accuracy": 0.8070739549839229, "balanced_accuracy": 0.5825390247271722, "f1": 0.3023255813953488, "recall": 0.22807017543859648, "precision": 0.4482758620689655, "roc_auc": 0.8393424506147258, "confusion_matrix": [[238, 16], [44, 13]]}}, "stations": [{"id": "humboldt-south-bay", "station": "Humboldt South Bay", "week_start": "2024-08-26", "station_id": "NDBC-46022", "latitude": 40.72343, "longitude": -124.2234, "rf_probability": 0.8173, "xgb_probability": 0.9942, "rf_risk_class": "high", "sst": "12.5 C", "ndbc_sst": "12.7 C", "wind": "2.9 m/s", "chloro": "2.7"}, {"id": "monterey-wharf", "station": "Monterey Wharf", "week_start": "2022-08-29", "station_id": "NDBC-46042", "latitude": 36.603683, "longitude": -121.889275, "rf_probability": 0.6642, "xgb_probability": 0.0916, "rf_risk_class": "high", "sst": "14.5 C", "ndbc_sst": "14.3 C", "wind": "4.3 m/s", "chloro": "9.4"}, {"id": "cal-poly-pier", "station": "Cal Poly Pier", "week_start": "2026-03-02", "station_id": "NDBC-46011", "latitude": 35.170204, "longitude": -120.740685, "rf_probability": 0.3277, "xgb_probability": 0.0119, "rf_risk_class": "medium", "sst": "14.4 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "2.1"}, {"id": "humboldt", "station": "Humboldt", "week_start": "2026-01-12", "station_id": "NDBC-46022", "latitude": 40.77833, "longitude": -124.1967, "rf_probability": 0.2923, "xgb_probability": 0.0036, "rf_risk_class": "medium", "sst": "11.9 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "1.8"}, {"id": "stearns-wharf", "station": "Stearns Wharf", "week_start": "2026-03-02", "station_id": "NDBC-46053", "latitude": 34.408043, "longitude": -119.68485, "rf_probability": 0.288, "xgb_probability": 0.0126, "rf_risk_class": "medium", "sst": "15.1 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "6.1"}, {"id": "trinidad-pier", "station": "Trinidad Pier", "week_start": "2026-02-02", "station_id": "NDBC-46022", "latitude": 41.05495, "longitude": -124.14696, "rf_probability": 0.2776, "xgb_probability": 0.0075, "rf_risk_class": "medium", "sst": "11.9 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "2.0"}, {"id": "santa-cruz-wharf", "station": "Santa Cruz Wharf", "week_start": "2026-03-23", "station_id": "NDBC-46042", "latitude": 36.958, "longitude": -122.017, "rf_probability": 0.2152, "xgb_probability": 0.0035, "rf_risk_class": "low", "sst": "13.5 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "0.8"}, {"id": "scripps-pier", "station": "Scripps Pier", "week_start": "2026-03-02", "station_id": "NDBC-46086", "latitude": 32.867, "longitude": -117.257, "rf_probability": 0.1492, "xgb_probability": 0.0136, "rf_risk_class": "low", "sst": "16.5 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "2.0"}, {"id": "newport-beach-pier", "station": "Newport Beach Pier", "week_start": "2026-03-23", "station_id": "NDBC-46025", "latitude": 33.6061, "longitude": -117.9311, "rf_probability": 0.1041, "xgb_probability": 0.0011, "rf_risk_class": "low", "sst": "17.5 C", "ndbc_sst": "17.7 C", "wind": "2.6 m/s", "chloro": "1.9"}, {"id": "santa-monica-pier", "station": "Santa Monica Pier", "week_start": "2026-03-02", "station_id": "NDBC-46025", "latitude": 34.008, "longitude": -118.499, "rf_probability": 0.1003, "xgb_probability": 0.0031, "rf_risk_class": "low", "sst": "15.8 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "0.8"}]}</script>
   <script>
     const FALLBACK_DATA = JSON.parse(document.getElementById('dashboard-data').textContent);
     let DATA = FALLBACK_DATA;
@@ -1137,11 +428,11 @@
           </div>
           <div class="pu-compare">
             <div class="pu-citem">
-              <div class="pu-cval ${rfCls}">${(s.rf_probability * 100).toFixed(1)}% · ${riskLabel(rfCls)}</div>
+              <div class="pu-cval ${rfCls}">${(s.rf_probability*100).toFixed(1)}% · ${riskLabel(rfCls)}</div>
               <div class="pu-clabel">Random Forest</div>
             </div>
             <div class="pu-citem">
-              <div class="pu-cval ${xgbCls}">${(s.xgb_probability * 100).toFixed(1)}% · ${riskLabel(xgbCls)}</div>
+              <div class="pu-cval ${xgbCls}">${(s.xgb_probability*100).toFixed(1)}% · ${riskLabel(xgbCls)}</div>
               <div class="pu-clabel">XGBoost</div>
             </div>
           </div>
@@ -1153,10 +444,10 @@
       const filtered = currentFilter === 'all'
         ? STATIONS
         : STATIONS.filter(s => {
-          const prob = getProb(s);
-          const thr = getThreshold(s);
-          return riskClass(prob, thr) === currentFilter;
-        });
+            const prob = getProb(s);
+            const thr = getThreshold(s);
+            return riskClass(prob, thr) === currentFilter;
+          });
 
       filtered.sort((a, b) => getProb(b) - getProb(a));
 
@@ -1170,11 +461,11 @@
           <div class="model-compare">
             <div class="mc-item">
               <div class="mc-label">Random Forest</div>
-              <div class="mc-val ${rfCls}">${(s.rf_probability * 100).toFixed(1)}% · ${riskLabel(rfCls)}</div>
+              <div class="mc-val ${rfCls}">${(s.rf_probability*100).toFixed(1)}% · ${riskLabel(rfCls)}</div>
             </div>
             <div class="mc-item">
               <div class="mc-label">XGBoost</div>
-              <div class="mc-val ${xgbCls}">${(s.xgb_probability * 100).toFixed(1)}% · ${riskLabel(xgbCls)}</div>
+              <div class="mc-val ${xgbCls}">${(s.xgb_probability*100).toFixed(1)}% · ${riskLabel(xgbCls)}</div>
             </div>
           </div>` : '';
 
@@ -1186,7 +477,7 @@
                 <div class="card-meta">${s.station_id} · ${s.week_start}</div>
               </div>
               <div class="card-risk">
-                <div class="card-pct ${cls}">${(prob * 100).toFixed(1)}%</div>
+                <div class="card-pct ${cls}">${(prob*100).toFixed(1)}%</div>
                 <div class="card-rlabel ${cls}">${riskLabel(cls)}</div>
               </div>
             </div>
