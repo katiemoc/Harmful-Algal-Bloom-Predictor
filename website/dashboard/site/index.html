@@ -247,19 +247,19 @@
       <!-- Metrics -->
       <div class="metrics-strip">
         <div class="metric-cell">
-          <div class="metric-val">10</div>
+          <div class="metric-val" id="metric-station-count">10</div>
           <div class="metric-label">stations<br>monitored</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val danger">2</div>
+          <div class="metric-val danger" id="metric-high-count">2</div>
           <div class="metric-label">high-risk<br>estimates</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val caution">4</div>
+          <div class="metric-val caution" id="metric-medium-count">4</div>
           <div class="metric-label">elevated<br>stations</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val ok">4</div>
+          <div class="metric-val ok" id="metric-low-count">4</div>
           <div class="metric-label">low-risk<br>estimates</div>
         </div>
       </div>
@@ -464,7 +464,6 @@
 
     // ── UPDATE FILTER COUNTS ──
     function updateCounts() {
-      const thr = getThreshold(STATIONS[0]);
       const hi = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'high').length;
       const med = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'medium').length;
       const lo = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'low').length;
@@ -472,13 +471,18 @@
       document.getElementById('cnt-high').textContent = hi;
       document.getElementById('cnt-med').textContent = med;
       document.getElementById('cnt-low').textContent = lo;
+      document.getElementById('metric-station-count').textContent = STATIONS.length;
+      document.getElementById('metric-high-count').textContent = hi;
+      document.getElementById('metric-medium-count').textContent = med;
+      document.getElementById('metric-low-count').textContent = lo;
     }
 
     // ── MODEL SWITCH ──
     function setModel(model) {
       activeModel = model;
       ['rf','xgb','both'].forEach(m => {
-        document.getElementById(`btn-${m}`).classList.toggle('active', m === model);
+        const btn = document.getElementById(`btn-${m}`);
+        if (btn) btn.classList.toggle('active', m === model);
       });
 
       // Update perf panel

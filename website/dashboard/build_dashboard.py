@@ -300,19 +300,19 @@ HTML_TEMPLATE = r"""
       <!-- Metrics -->
       <div class="metrics-strip">
         <div class="metric-cell">
-          <div class="metric-val">{{ summary.station_count }}</div>
+          <div class="metric-val" id="metric-station-count">{{ summary.station_count }}</div>
           <div class="metric-label">stations<br>monitored</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val danger">{{ summary.high_count }}</div>
+          <div class="metric-val danger" id="metric-high-count">{{ summary.high_count }}</div>
           <div class="metric-label">high-risk<br>estimates</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val caution">{{ summary.medium_count }}</div>
+          <div class="metric-val caution" id="metric-medium-count">{{ summary.medium_count }}</div>
           <div class="metric-label">elevated<br>stations</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val ok">{{ summary.low_count }}</div>
+          <div class="metric-val ok" id="metric-low-count">{{ summary.low_count }}</div>
           <div class="metric-label">low-risk<br>estimates</div>
         </div>
       </div>
@@ -518,7 +518,6 @@ HTML_TEMPLATE = r"""
 
     // ── UPDATE FILTER COUNTS ──
     function updateCounts() {
-      const thr = getThreshold(STATIONS[0]);
       const hi = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'high').length;
       const med = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'medium').length;
       const lo = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'low').length;
@@ -526,13 +525,18 @@ HTML_TEMPLATE = r"""
       document.getElementById('cnt-high').textContent = hi;
       document.getElementById('cnt-med').textContent = med;
       document.getElementById('cnt-low').textContent = lo;
+      document.getElementById('metric-station-count').textContent = STATIONS.length;
+      document.getElementById('metric-high-count').textContent = hi;
+      document.getElementById('metric-medium-count').textContent = med;
+      document.getElementById('metric-low-count').textContent = lo;
     }
 
     // ── MODEL SWITCH ──
     function setModel(model) {
       activeModel = model;
       ['rf','xgb','both'].forEach(m => {
-        document.getElementById(`btn-${m}`).classList.toggle('active', m === model);
+        const btn = document.getElementById(`btn-${m}`);
+        if (btn) btn.classList.toggle('active', m === model);
       });
 
       // Update perf panel
