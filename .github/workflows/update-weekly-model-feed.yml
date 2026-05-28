@@ -125,4 +125,9 @@ jobs:
 
           git fetch origin main
           git rebase origin/main
-          git push origin main
+          git push origin main || {
+            echo "Push failed because main changed again. Rebasing and retrying..."
+            git fetch origin main
+            git rebase origin/main
+            git push origin main
+          }
