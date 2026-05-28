@@ -820,7 +820,7 @@ def fetch_model_feed_from_supabase() -> pd.DataFrame | None:
     _load_env(ROOT.parent / "backend" / ".env")
     _load_env(ROOT.parent / ".env")
     supabase_url = os.environ.get("SUPABASE_URL")
-    supabase_key = os.environ.get("SUPABASE_KEY")
+    supabase_key = os.environ.get("SUPABASE_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     if not supabase_url or not supabase_key:
         return None
     endpoint = (
