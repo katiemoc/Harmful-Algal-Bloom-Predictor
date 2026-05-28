@@ -1,8 +1,14 @@
 from functools import lru_cache
 import json
+from pathlib import Path
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = BACKEND_DIR.parents[1]
+LEGACY_BACKEND_DIR = PROJECT_ROOT / "backend"
 
 
 class Settings(BaseSettings):
@@ -17,7 +23,11 @@ class Settings(BaseSettings):
     default_select_limit: int = 100
 
     model_config = SettingsConfigDict(
-        env_file=("backend/.env", ".env"),
+        env_file=(
+            BACKEND_DIR / ".env",
+            LEGACY_BACKEND_DIR / ".env",
+            PROJECT_ROOT / ".env",
+        ),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
