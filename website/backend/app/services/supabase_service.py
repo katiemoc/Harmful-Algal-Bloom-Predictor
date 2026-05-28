@@ -89,7 +89,8 @@ class SupabaseService:
         if self._client is None:
             if not self.settings.supabase_configured:
                 raise SupabaseConfigurationError(
-                    "Supabase is not configured. Set SUPABASE_URL and SUPABASE_KEY in backend/.env."
+                    "Supabase is not configured. Set SUPABASE_URL and SUPABASE_KEY in "
+                    "website/backend/.env, backend/.env, or .env."
                 )
             self._client = httpx.Client(
                 base_url=f"{self.settings.supabase_url.rstrip('/')}/rest/v1",
