@@ -47,7 +47,7 @@ backend/
 4. Open Swagger UI:
 
    ```text
-   http://127.0.0.1:8000/docs
+   http://127.0.0.1:8000/api/docs
    ```
 
 ## Example ingest request
