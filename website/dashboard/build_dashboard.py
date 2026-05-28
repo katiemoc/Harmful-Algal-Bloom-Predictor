@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "data" / "processed" / "merged" / "hab_ndbc_merged.csv"
 OUT_DIR = ROOT / "dashboard" / "site"
 OUT_PATH = OUT_DIR / "index.html"
+OUT_JSON_PATH = OUT_DIR / "dashboard_data.json"
 
 TARGET = "isHarmful"
 EXCLUDE_COLUMNS = ["week_start", "sample_date", TARGET, "pda", "potential_bloom"]
@@ -270,13 +271,11 @@ HTML_TEMPLATE = r"""
     <span class="topbar-logo">HAB Predictor</span>
     <span class="topbar-sub">California Coastal Risk Dashboard</span>
     <div class="topbar-right">
-     <span class="topbar-update">Latest available dataset week: {{ summary.latest_update }}</span>
-      {% if summary.high_count > 0 %}
+     <span class="topbar-update" id="topbar-update">Latest available dataset week: {{ summary.latest_update }}</span>
       <div class="topbar-alert">
         <div class="alert-dot"></div>
-        {{ summary.high_count }} HIGH-RISK ESTIMATE{% if summary.high_count != 1 %}S{% endif %}
+        <span id="topbar-alert-text">{{ summary.high_count }} HIGH-RISK ESTIMATE{% if summary.high_count != 1 %}S{% endif %}</span>
       </div>
-      {% endif %}
     </div>
   </header>
 
@@ -285,7 +284,7 @@ HTML_TEMPLATE = r"""
     <div style="position:relative;flex:1;height:100%;">
       <div id="map"></div>
       <div class="map-overlay">
-        <div class="map-chip">{{ summary.station_count }} CalHABMAP-linked station locations</div>
+        <div class="map-chip" id="map-chip">{{ summary.station_count }} CalHABMAP-linked station locations</div>
         <div class="map-legend">
           <div class="legend-row"><div class="l-dot high"></div>High risk</div>
           <div class="legend-row"><div class="l-dot medium"></div>Elevated</div>
@@ -300,19 +299,19 @@ HTML_TEMPLATE = r"""
       <!-- Metrics -->
       <div class="metrics-strip">
         <div class="metric-cell">
-          <div class="metric-val">{{ summary.station_count }}</div>
+          <div class="metric-val" id="metric-stations">{{ summary.station_count }}</div>
           <div class="metric-label">stations<br>monitored</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val danger">{{ summary.high_count }}</div>
+          <div class="metric-val danger" id="metric-high">{{ summary.high_count }}</div>
           <div class="metric-label">high-risk<br>estimates</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val caution">{{ summary.medium_count }}</div>
+          <div class="metric-val caution" id="metric-medium">{{ summary.medium_count }}</div>
           <div class="metric-label">elevated<br>stations</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val ok">{{ summary.low_count }}</div>
+          <div class="metric-val ok" id="metric-low">{{ summary.low_count }}</div>
           <div class="metric-label">low-risk<br>estimates</div>
         </div>
       </div>
@@ -360,8 +359,9 @@ HTML_TEMPLATE = r"""
 
   <script type="application/json" id="dashboard-data">{{ dashboard_json }}</script>
   <script>
-    const DATA = JSON.parse(document.getElementById('dashboard-data').textContent);
-    const STATIONS = DATA.stations;
+    const FALLBACK_DATA = JSON.parse(document.getElementById('dashboard-data').textContent);
+    let DATA = FALLBACK_DATA;
+    let STATIONS = Array.isArray(DATA.stations) ? [...DATA.stations] : [];
 
     let activeModel = 'rf';
     let activeStation = null;
@@ -391,25 +391,71 @@ HTML_TEMPLATE = r"""
     function getThreshold(s) {
       return activeModel === 'xgb' ? DATA.summary.xgb_threshold : DATA.summary.rf_threshold;
     }
+    function setDashboardData(nextData) {
+      DATA = nextData;
+      STATIONS = Array.isArray(nextData.stations) ? [...nextData.stations] : [];
+    }
+    function getApiBases() {
+      const params = new URLSearchParams(window.location.search);
+      const metaBase = document.querySelector('meta[name="hab-api-base"]')?.content?.trim();
+      const configuredBases = [
+        params.get('api'),
+        typeof window.HAB_API_BASE === 'string' ? window.HAB_API_BASE.trim() : '',
+        metaBase || '',
+      ].filter(Boolean);
+
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        configuredBases.push('http://127.0.0.1:8000');
+      }
+
+      configuredBases.push(window.location.origin);
+      return [...new Set(configuredBases.map(base => base.replace(/\/$/, '')))];
+    }
+    async function loadDashboardData() {
+      for (const base of getApiBases()) {
+        const url = `${base}/api/v1/dashboard`;
+        try {
+          const response = await fetch(url, { headers: { Accept: 'application/json' } });
+          if (!response.ok) continue;
+
+          const payload = await response.json();
+          if (!payload || !Array.isArray(payload.stations) || !payload.summary) continue;
+
+          setDashboardData(payload);
+          return;
+        } catch (error) {
+          console.warn(`Dashboard API fetch failed for ${url}`, error);
+        }
+      }
+
+      setDashboardData(FALLBACK_DATA);
+    }
 
     // ── MARKERS ──
-    STATIONS.forEach(s => {
-      const prob = s.rf_probability;
-      const threshold = DATA.summary.rf_threshold;
-      const cls = riskClass(prob, threshold);
-
-      const icon = L.divIcon({
-        className: '',
-        html: `<div class="sdot ${cls}" id="dot-${s.id}"></div>`,
-        iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -14],
+    function renderMarkers() {
+      Object.entries(markers).forEach(([id, marker]) => {
+        map.removeLayer(marker);
+        delete markers[id];
       });
 
-      const marker = L.marker([s.latitude, s.longitude], { icon });
-      marker.bindPopup(buildPopup(s), { maxWidth: 268, minWidth: 248 });
-      marker.on('click', () => activateStation(s.id));
-      map.addLayer(marker);
-      markers[s.id] = marker;
-    });
+      STATIONS.forEach(s => {
+        const prob = s.rf_probability;
+        const threshold = DATA.summary.rf_threshold;
+        const cls = riskClass(prob, threshold);
+
+        const icon = L.divIcon({
+          className: '',
+          html: `<div class="sdot ${cls}${activeStation === s.id ? ' active' : ''}" id="dot-${s.id}"></div>`,
+          iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -14],
+        });
+
+        const marker = L.marker([s.latitude, s.longitude], { icon });
+        marker.bindPopup(buildPopup(s), { maxWidth: 268, minWidth: 248 });
+        marker.on('click', () => activateStation(s.id));
+        map.addLayer(marker);
+        markers[s.id] = marker;
+      });
+    }
 
     function buildPopup(s) {
       const prob = getProb(s);
@@ -458,7 +504,6 @@ HTML_TEMPLATE = r"""
             return riskClass(prob, thr) === currentFilter;
           });
 
-      // Sort by current model probability descending
       filtered.sort((a, b) => getProb(b) - getProb(a));
 
       list.innerHTML = filtered.map(s => {
@@ -512,13 +557,14 @@ HTML_TEMPLATE = r"""
         if (dot) {
           dot.className = `sdot ${cls}${activeStation === s.id ? ' active' : ''}`;
         }
-        markers[s.id].setPopupContent(buildPopup(s));
+        if (markers[s.id]) {
+          markers[s.id].setPopupContent(buildPopup(s));
+        }
       });
     }
 
     // ── UPDATE FILTER COUNTS ──
     function updateCounts() {
-      const thr = getThreshold(STATIONS[0]);
       const hi = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'high').length;
       const med = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'medium').length;
       const lo = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'low').length;
@@ -526,6 +572,39 @@ HTML_TEMPLATE = r"""
       document.getElementById('cnt-high').textContent = hi;
       document.getElementById('cnt-med').textContent = med;
       document.getElementById('cnt-low').textContent = lo;
+    }
+    function updateSummaryUI() {
+      document.getElementById('topbar-update').textContent = `Latest available dataset week: ${DATA.summary.latest_update}`;
+      document.getElementById('topbar-alert-text').textContent = `${DATA.summary.high_count} HIGH-RISK ESTIMATE${DATA.summary.high_count === 1 ? '' : 'S'}`;
+      document.getElementById('map-chip').textContent = `${DATA.summary.station_count} CalHABMAP-linked station locations`;
+      document.getElementById('metric-stations').textContent = DATA.summary.station_count;
+      document.getElementById('metric-high').textContent = DATA.summary.high_count;
+      document.getElementById('metric-medium').textContent = DATA.summary.medium_count;
+      document.getElementById('metric-low').textContent = DATA.summary.low_count;
+    }
+    function updatePerfPanel() {
+      const metrics = activeModel === 'xgb' ? DATA.summary.xgb_metrics : DATA.summary.rf_metrics;
+      const title = activeModel === 'both' ? 'Model Comparison'
+                  : activeModel === 'xgb' ? 'XGBoost Performance'
+                  : 'Random Forest Performance';
+      document.getElementById('model-perf-title').textContent = title;
+
+      if (activeModel !== 'both') {
+        document.getElementById('model-perf-metrics').innerHTML = `
+          <div class="mp-metric"><div class="mp-val">${metrics.roc_auc.toFixed(2)}</div><div class="mp-label">AUC-ROC</div></div>
+          <div class="mp-metric"><div class="mp-val">${metrics.f1.toFixed(2)}</div><div class="mp-label">F1</div></div>
+          <div class="mp-metric"><div class="mp-val">${metrics.recall.toFixed(2)}</div><div class="mp-label">Recall</div></div>
+          <div class="mp-metric"><div class="mp-val">${metrics.precision.toFixed(2)}</div><div class="mp-label">Precision</div></div>`;
+        return;
+      }
+
+      const rf = DATA.summary.rf_metrics;
+      const xgb = DATA.summary.xgb_metrics;
+      document.getElementById('model-perf-metrics').innerHTML = `
+        <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.roc_auc.toFixed(2)}<br>XGB ${xgb.roc_auc.toFixed(2)}</div><div class="mp-label">AUC-ROC</div></div>
+        <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.f1.toFixed(2)}<br>XGB ${xgb.f1.toFixed(2)}</div><div class="mp-label">F1</div></div>
+        <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.recall.toFixed(2)}<br>XGB ${xgb.recall.toFixed(2)}</div><div class="mp-label">Recall</div></div>
+        <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.precision.toFixed(2)}<br>XGB ${xgb.precision.toFixed(2)}</div><div class="mp-label">Precision</div></div>`;
     }
 
     // ── MODEL SWITCH ──
@@ -535,29 +614,7 @@ HTML_TEMPLATE = r"""
         document.getElementById(`btn-${m}`).classList.toggle('active', m === model);
       });
 
-      // Update perf panel
-      const metrics = model === 'xgb' ? DATA.summary.xgb_metrics : DATA.summary.rf_metrics;
-      const title = model === 'both' ? 'Model Comparison'
-                  : model === 'xgb' ? 'XGBoost Performance'
-                  : 'Random Forest Performance';
-      document.getElementById('model-perf-title').textContent = title;
-
-      if (model !== 'both') {
-        document.getElementById('model-perf-metrics').innerHTML = `
-          <div class="mp-metric"><div class="mp-val">${metrics.roc_auc.toFixed(2)}</div><div class="mp-label">AUC-ROC</div></div>
-          <div class="mp-metric"><div class="mp-val">${metrics.f1.toFixed(2)}</div><div class="mp-label">F1</div></div>
-          <div class="mp-metric"><div class="mp-val">${metrics.recall.toFixed(2)}</div><div class="mp-label">Recall</div></div>
-          <div class="mp-metric"><div class="mp-val">${metrics.precision.toFixed(2)}</div><div class="mp-label">Precision</div></div>`;
-      } else {
-        const rf = DATA.summary.rf_metrics;
-        const xgb = DATA.summary.xgb_metrics;
-        document.getElementById('model-perf-metrics').innerHTML = `
-          <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.roc_auc.toFixed(2)}<br>XGB ${xgb.roc_auc.toFixed(2)}</div><div class="mp-label">AUC-ROC</div></div>
-          <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.f1.toFixed(2)}<br>XGB ${xgb.f1.toFixed(2)}</div><div class="mp-label">F1</div></div>
-          <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.recall.toFixed(2)}<br>XGB ${xgb.recall.toFixed(2)}</div><div class="mp-label">Recall</div></div>
-          <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.precision.toFixed(2)}<br>XGB ${xgb.precision.toFixed(2)}</div><div class="mp-label">Precision</div></div>`;
-      }
-
+      updatePerfPanel();
       updateMarkers();
       updateCounts();
       renderList();
@@ -592,18 +649,38 @@ HTML_TEMPLATE = r"""
       }, 50);
 
       if (panToMap) map.flyTo([s.latitude, s.longitude], Math.max(map.getZoom(), 9), { duration: 0.8 });
-      markers[id].openPopup();
+      if (markers[id]) {
+        markers[id].openPopup();
+      }
+    }
+    function syncDashboardView() {
+      if (!STATIONS.some(s => s.id === activeStation)) {
+        activeStation = STATIONS[0]?.id || null;
+      }
+
+      updateSummaryUI();
+      renderMarkers();
+      updatePerfPanel();
+      updateCounts();
+      renderList();
+      updateMarkers();
     }
 
     // ── INIT ──
-    renderList();
-    // Highlight the highest-risk station in the sidebar without panning the map,
-    // so the initial view shows all of California.
-    if (STATIONS.length > 0) {
+    syncDashboardView();
+    loadDashboardData().then(() => {
+      syncDashboardView();
+      if (activeStation) {
+        setTimeout(() => {
+          const dot = document.getElementById(`dot-${activeStation}`);
+          if (dot) dot.classList.add('active');
+          renderList();
+        }, 600);
+      }
+    });
+    if (activeStation) {
       setTimeout(() => {
-        const s = STATIONS[0];
-        activeStation = s.id;
-        const dot = document.getElementById(`dot-${s.id}`);
+        const dot = document.getElementById(`dot-${activeStation}`);
         if (dot) dot.classList.add('active');
         renderList();
       }, 600);
@@ -739,7 +816,9 @@ def _load_env(path: Path) -> None:
 
 
 def fetch_model_feed_from_supabase() -> pd.DataFrame | None:
+    _load_env(ROOT / "backend" / ".env")
     _load_env(ROOT.parent / "backend" / ".env")
+    _load_env(ROOT.parent / ".env")
     supabase_url = os.environ.get("SUPABASE_URL")
     supabase_key = os.environ.get("SUPABASE_KEY")
     if not supabase_url or not supabase_key:
@@ -857,8 +936,10 @@ def build_dashboard() -> None:
     )
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    OUT_JSON_PATH.write_text(json.dumps(payload), encoding="utf-8")
     OUT_PATH.write_text(html, encoding="utf-8")
     print(f"Wrote {OUT_PATH}")
+    print(f"Wrote {OUT_JSON_PATH}")
     print(f"  RF  AUC-ROC={rf_metrics['roc_auc']:.3f}  F1={rf_metrics['f1']:.3f}  threshold={rf_thr:.3f}")
     print(f"  XGB AUC-ROC={xgb_metrics['roc_auc']:.3f}  F1={xgb_metrics['f1']:.3f}  threshold={xgb_thr:.3f}")
     print(f"  Stations: {len(stations)} total — {high_count} high / {medium_count} medium / {low_count} low")

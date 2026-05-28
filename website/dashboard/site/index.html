@@ -902,11 +902,11 @@
     <span class="topbar-logo">HAB Predictor</span>
     <span class="topbar-sub">California Coastal Risk Dashboard</span>
     <div class="topbar-right">
-      <span class="topbar-update">Latest available dataset week: 2026-03-23</span>
+      <span class="topbar-update" id="topbar-update">Latest available dataset week: 2026-03-23</span>
 
       <div class="topbar-alert">
         <div class="alert-dot"></div>
-        2 HIGH-RISK ESTIMATES
+        <span id="topbar-alert-text">2 HIGH-RISK ESTIMATES</span>
       </div>
 
     </div>
@@ -917,7 +917,7 @@
     <div style="position:relative;flex:1;height:100%;">
       <div id="map"></div>
       <div class="map-overlay">
-        <div class="map-chip">10 CalHABMAP-linked station locations</div>
+        <div class="map-chip" id="map-chip">10 CalHABMAP-linked station locations</div>
         <div class="map-legend">
           <div class="legend-row">
             <div class="l-dot high"></div>High risk
@@ -938,19 +938,19 @@
       <!-- Metrics -->
       <div class="metrics-strip">
         <div class="metric-cell">
-          <div class="metric-val">10</div>
+          <div class="metric-val" id="metric-stations">10</div>
           <div class="metric-label">stations<br>monitored</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val danger">2</div>
+          <div class="metric-val danger" id="metric-high">2</div>
           <div class="metric-label">high-risk<br>estimates</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val caution">4</div>
+          <div class="metric-val caution" id="metric-medium">4</div>
           <div class="metric-label">elevated<br>stations</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val ok">4</div>
+          <div class="metric-val ok" id="metric-low">4</div>
           <div class="metric-label">low-risk<br>estimates</div>
         </div>
       </div>
@@ -960,6 +960,7 @@
         <span class="toggle-label">Model:</span>
         <button class="toggle-btn active" id="btn-rf" onclick="setModel('rf')">Random Forest</button>
         <button class="toggle-btn" id="btn-xgb" onclick="setModel('xgb')">XGBoost</button>
+        <button class="toggle-btn" id="btn-both" onclick="setModel('both')">Both</button>
       </div>
 
       <!-- Filter tabs -->
@@ -1015,15 +1016,15 @@
   <script type="application/json"
     id="dashboard-data">{"summary": {"station_count": 10, "high_count": 2, "medium_count": 4, "low_count": 4, "latest_update": "2026-03-23", "rf_threshold": 0.4336031533626914, "xgb_threshold": 0.0897357314825058, "rf_metrics": {"threshold": 0.4336031533626914, "accuracy": 0.8102893890675241, "balanced_accuracy": 0.7001657687525902, "f1": 0.5042016806722689, "recall": 0.5263157894736842, "precision": 0.4838709677419355, "roc_auc": 0.8613068103329189, "confusion_matrix": [[222, 32], [27, 30]]}, "xgb_metrics": {"threshold": 0.0897357314825058, "accuracy": 0.8102893890675241, "balanced_accuracy": 0.5777041027766265, "f1": 0.2891566265060241, "recall": 0.21052631578947367, "precision": 0.46153846153846156, "roc_auc": 0.8374084818345074, "confusion_matrix": [[240, 14], [45, 12]]}}, "stations": [{"id": "humboldt-south-bay", "station": "Humboldt South Bay", "week_start": "2024-08-26", "station_id": "NDBC-46022", "latitude": 40.72343, "longitude": -124.2234, "rf_probability": 0.8176, "xgb_probability": 0.995, "rf_risk_class": "high", "sst": "12.5 C", "ndbc_sst": "12.7 C", "wind": "2.9 m/s", "chloro": "2.7"}, {"id": "monterey-wharf", "station": "Monterey Wharf", "week_start": "2022-08-29", "station_id": "NDBC-46042", "latitude": 36.603683, "longitude": -121.889275, "rf_probability": 0.6642, "xgb_probability": 0.079, "rf_risk_class": "high", "sst": "14.5 C", "ndbc_sst": "14.3 C", "wind": "4.3 m/s", "chloro": "9.4"}, {"id": "cal-poly-pier", "station": "Cal Poly Pier", "week_start": "2026-03-02", "station_id": "NDBC-46011", "latitude": 35.170204, "longitude": -120.740685, "rf_probability": 0.3277, "xgb_probability": 0.0062, "rf_risk_class": "medium", "sst": "14.4 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "2.1"}, {"id": "humboldt", "station": "Humboldt", "week_start": "2026-01-12", "station_id": "NDBC-46022", "latitude": 40.77833, "longitude": -124.1967, "rf_probability": 0.2923, "xgb_probability": 0.0028, "rf_risk_class": "medium", "sst": "11.9 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "1.8"}, {"id": "stearns-wharf", "station": "Stearns Wharf", "week_start": "2026-03-02", "station_id": "NDBC-46053", "latitude": 34.408043, "longitude": -119.68485, "rf_probability": 0.288, "xgb_probability": 0.0032, "rf_risk_class": "medium", "sst": "15.1 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "6.1"}, {"id": "trinidad-pier", "station": "Trinidad Pier", "week_start": "2026-02-02", "station_id": "NDBC-46022", "latitude": 41.05495, "longitude": -124.14696, "rf_probability": 0.2776, "xgb_probability": 0.0026, "rf_risk_class": "medium", "sst": "11.9 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "2.0"}, {"id": "santa-cruz-wharf", "station": "Santa Cruz Wharf", "week_start": "2026-03-23", "station_id": "NDBC-46042", "latitude": 36.958, "longitude": -122.017, "rf_probability": 0.2152, "xgb_probability": 0.0028, "rf_risk_class": "low", "sst": "13.5 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "0.8"}, {"id": "scripps-pier", "station": "Scripps Pier", "week_start": "2026-03-02", "station_id": "NDBC-46086", "latitude": 32.867, "longitude": -117.257, "rf_probability": 0.1492, "xgb_probability": 0.021, "rf_risk_class": "low", "sst": "16.5 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "2.0"}, {"id": "newport-beach-pier", "station": "Newport Beach Pier", "week_start": "2026-03-23", "station_id": "NDBC-46025", "latitude": 33.6061, "longitude": -117.9311, "rf_probability": 0.1041, "xgb_probability": 0.0007, "rf_risk_class": "low", "sst": "17.5 C", "ndbc_sst": "17.7 C", "wind": "2.6 m/s", "chloro": "1.9"}, {"id": "santa-monica-pier", "station": "Santa Monica Pier", "week_start": "2026-03-02", "station_id": "NDBC-46025", "latitude": 34.008, "longitude": -118.499, "rf_probability": 0.1003, "xgb_probability": 0.0034, "rf_risk_class": "low", "sst": "15.8 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "0.8"}]}</script>
   <script>
-    const DATA = JSON.parse(document.getElementById('dashboard-data').textContent);
-    const STATIONS = DATA.stations;
+    const FALLBACK_DATA = JSON.parse(document.getElementById('dashboard-data').textContent);
+    let DATA = FALLBACK_DATA;
+    let STATIONS = Array.isArray(DATA.stations) ? [...DATA.stations] : [];
 
     let activeModel = 'rf';
     let activeStation = null;
     let currentFilter = 'all';
     const markers = {};
 
-    // ── MAP INIT ──
     const map = L.map('map', { center: [37.2, -121.5], zoom: 6, zoomControl: true });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -1046,25 +1047,70 @@
     function getThreshold(s) {
       return activeModel === 'xgb' ? DATA.summary.xgb_threshold : DATA.summary.rf_threshold;
     }
+    function setDashboardData(nextData) {
+      DATA = nextData;
+      STATIONS = Array.isArray(nextData.stations) ? [...nextData.stations] : [];
+    }
+    function getApiBases() {
+      const params = new URLSearchParams(window.location.search);
+      const metaBase = document.querySelector('meta[name="hab-api-base"]')?.content?.trim();
+      const configuredBases = [
+        params.get('api'),
+        typeof window.HAB_API_BASE === 'string' ? window.HAB_API_BASE.trim() : '',
+        metaBase || '',
+      ].filter(Boolean);
 
-    // ── MARKERS ──
-    STATIONS.forEach(s => {
-      const prob = s.rf_probability;
-      const threshold = DATA.summary.rf_threshold;
-      const cls = riskClass(prob, threshold);
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        configuredBases.push('http://127.0.0.1:8000');
+      }
 
-      const icon = L.divIcon({
-        className: '',
-        html: `<div class="sdot ${cls}" id="dot-${s.id}"></div>`,
-        iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -14],
+      configuredBases.push(window.location.origin);
+      return [...new Set(configuredBases.map(base => base.replace(/\/$/, '')))];
+    }
+    async function loadDashboardData() {
+      for (const base of getApiBases()) {
+        const url = `${base}/api/v1/dashboard`;
+        try {
+          const response = await fetch(url, { headers: { Accept: 'application/json' } });
+          if (!response.ok) continue;
+
+          const payload = await response.json();
+          if (!payload || !Array.isArray(payload.stations) || !payload.summary) continue;
+
+          setDashboardData(payload);
+          return;
+        } catch (error) {
+          console.warn(`Dashboard API fetch failed for ${url}`, error);
+        }
+      }
+
+      setDashboardData(FALLBACK_DATA);
+    }
+
+    function renderMarkers() {
+      Object.entries(markers).forEach(([id, marker]) => {
+        map.removeLayer(marker);
+        delete markers[id];
       });
 
-      const marker = L.marker([s.latitude, s.longitude], { icon });
-      marker.bindPopup(buildPopup(s), { maxWidth: 268, minWidth: 248 });
-      marker.on('click', () => activateStation(s.id));
-      map.addLayer(marker);
-      markers[s.id] = marker;
-    });
+      STATIONS.forEach(s => {
+        const prob = s.rf_probability;
+        const threshold = DATA.summary.rf_threshold;
+        const cls = riskClass(prob, threshold);
+
+        const icon = L.divIcon({
+          className: '',
+          html: `<div class="sdot ${cls}${activeStation === s.id ? ' active' : ''}" id="dot-${s.id}"></div>`,
+          iconSize: [20, 20], iconAnchor: [10, 10], popupAnchor: [0, -14],
+        });
+
+        const marker = L.marker([s.latitude, s.longitude], { icon });
+        marker.bindPopup(buildPopup(s), { maxWidth: 268, minWidth: 248 });
+        marker.on('click', () => activateStation(s.id));
+        map.addLayer(marker);
+        markers[s.id] = marker;
+      });
+    }
 
     function buildPopup(s) {
       const prob = getProb(s);
@@ -1102,7 +1148,6 @@
         </div>`;
     }
 
-    // ── RENDER LIST ──
     function renderList() {
       const list = document.getElementById('station-list');
       const filtered = currentFilter === 'all'
@@ -1113,7 +1158,6 @@
           return riskClass(prob, thr) === currentFilter;
         });
 
-      // Sort by current model probability descending
       filtered.sort((a, b) => getProb(b) - getProb(a));
 
       list.innerHTML = filtered.map(s => {
@@ -1157,7 +1201,6 @@
       }).join('');
     }
 
-    // ── UPDATE MARKERS ──
     function updateMarkers() {
       STATIONS.forEach(s => {
         const prob = getProb(s);
@@ -1167,13 +1210,13 @@
         if (dot) {
           dot.className = `sdot ${cls}${activeStation === s.id ? ' active' : ''}`;
         }
-        markers[s.id].setPopupContent(buildPopup(s));
+        if (markers[s.id]) {
+          markers[s.id].setPopupContent(buildPopup(s));
+        }
       });
     }
 
-    // ── UPDATE FILTER COUNTS ──
     function updateCounts() {
-      const thr = getThreshold(STATIONS[0]);
       const hi = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'high').length;
       const med = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'medium').length;
       const lo = STATIONS.filter(s => riskClass(getProb(s), getThreshold(s)) === 'low').length;
@@ -1182,43 +1225,52 @@
       document.getElementById('cnt-med').textContent = med;
       document.getElementById('cnt-low').textContent = lo;
     }
+    function updateSummaryUI() {
+      document.getElementById('topbar-update').textContent = `Latest available dataset week: ${DATA.summary.latest_update}`;
+      document.getElementById('topbar-alert-text').textContent = `${DATA.summary.high_count} HIGH-RISK ESTIMATE${DATA.summary.high_count === 1 ? '' : 'S'}`;
+      document.getElementById('map-chip').textContent = `${DATA.summary.station_count} CalHABMAP-linked station locations`;
+      document.getElementById('metric-stations').textContent = DATA.summary.station_count;
+      document.getElementById('metric-high').textContent = DATA.summary.high_count;
+      document.getElementById('metric-medium').textContent = DATA.summary.medium_count;
+      document.getElementById('metric-low').textContent = DATA.summary.low_count;
+    }
+    function updatePerfPanel() {
+      const metrics = activeModel === 'xgb' ? DATA.summary.xgb_metrics : DATA.summary.rf_metrics;
+      const title = activeModel === 'both' ? 'Model Comparison'
+        : activeModel === 'xgb' ? 'XGBoost Performance'
+          : 'Random Forest Performance';
+      document.getElementById('model-perf-title').textContent = title;
 
-    // ── MODEL SWITCH ──
+      if (activeModel !== 'both') {
+        document.getElementById('model-perf-metrics').innerHTML = `
+          <div class="mp-metric"><div class="mp-val">${metrics.roc_auc.toFixed(2)}</div><div class="mp-label">AUC-ROC</div></div>
+          <div class="mp-metric"><div class="mp-val">${metrics.f1.toFixed(2)}</div><div class="mp-label">F1</div></div>
+          <div class="mp-metric"><div class="mp-val">${metrics.recall.toFixed(2)}</div><div class="mp-label">Recall</div></div>
+          <div class="mp-metric"><div class="mp-val">${metrics.precision.toFixed(2)}</div><div class="mp-label">Precision</div></div>`;
+        return;
+      }
+
+      const rf = DATA.summary.rf_metrics;
+      const xgb = DATA.summary.xgb_metrics;
+      document.getElementById('model-perf-metrics').innerHTML = `
+        <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.roc_auc.toFixed(2)}<br>XGB ${xgb.roc_auc.toFixed(2)}</div><div class="mp-label">AUC-ROC</div></div>
+        <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.f1.toFixed(2)}<br>XGB ${xgb.f1.toFixed(2)}</div><div class="mp-label">F1</div></div>
+        <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.recall.toFixed(2)}<br>XGB ${xgb.recall.toFixed(2)}</div><div class="mp-label">Recall</div></div>
+        <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.precision.toFixed(2)}<br>XGB ${xgb.precision.toFixed(2)}</div><div class="mp-label">Precision</div></div>`;
+    }
+
     function setModel(model) {
       activeModel = model;
       ['rf', 'xgb', 'both'].forEach(m => {
         document.getElementById(`btn-${m}`).classList.toggle('active', m === model);
       });
 
-      // Update perf panel
-      const metrics = model === 'xgb' ? DATA.summary.xgb_metrics : DATA.summary.rf_metrics;
-      const title = model === 'both' ? 'Model Comparison'
-        : model === 'xgb' ? 'XGBoost Performance'
-          : 'Random Forest Performance';
-      document.getElementById('model-perf-title').textContent = title;
-
-      if (model !== 'both') {
-        document.getElementById('model-perf-metrics').innerHTML = `
-          <div class="mp-metric"><div class="mp-val">${metrics.roc_auc.toFixed(2)}</div><div class="mp-label">AUC-ROC</div></div>
-          <div class="mp-metric"><div class="mp-val">${metrics.f1.toFixed(2)}</div><div class="mp-label">F1</div></div>
-          <div class="mp-metric"><div class="mp-val">${metrics.recall.toFixed(2)}</div><div class="mp-label">Recall</div></div>
-          <div class="mp-metric"><div class="mp-val">${metrics.precision.toFixed(2)}</div><div class="mp-label">Precision</div></div>`;
-      } else {
-        const rf = DATA.summary.rf_metrics;
-        const xgb = DATA.summary.xgb_metrics;
-        document.getElementById('model-perf-metrics').innerHTML = `
-          <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.roc_auc.toFixed(2)}<br>XGB ${xgb.roc_auc.toFixed(2)}</div><div class="mp-label">AUC-ROC</div></div>
-          <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.f1.toFixed(2)}<br>XGB ${xgb.f1.toFixed(2)}</div><div class="mp-label">F1</div></div>
-          <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.recall.toFixed(2)}<br>XGB ${xgb.recall.toFixed(2)}</div><div class="mp-label">Recall</div></div>
-          <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.precision.toFixed(2)}<br>XGB ${xgb.precision.toFixed(2)}</div><div class="mp-label">Precision</div></div>`;
-      }
-
+      updatePerfPanel();
       updateMarkers();
       updateCounts();
       renderList();
     }
 
-    // ── FILTER ──
     function filterStations(filter, tabEl) {
       currentFilter = filter;
       document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
@@ -1226,7 +1278,6 @@
       renderList();
     }
 
-    // ── ACTIVATE STATION ──
     function activateStation(id, panToMap = false) {
       const s = STATIONS.find(x => x.id === id);
       if (!s) return;
@@ -1247,18 +1298,37 @@
       }, 50);
 
       if (panToMap) map.flyTo([s.latitude, s.longitude], Math.max(map.getZoom(), 9), { duration: 0.8 });
-      markers[id].openPopup();
+      if (markers[id]) {
+        markers[id].openPopup();
+      }
+    }
+    function syncDashboardView() {
+      if (!STATIONS.some(s => s.id === activeStation)) {
+        activeStation = STATIONS[0]?.id || null;
+      }
+
+      updateSummaryUI();
+      renderMarkers();
+      updatePerfPanel();
+      updateCounts();
+      renderList();
+      updateMarkers();
     }
 
-    // ── INIT ──
-    renderList();
-    // Highlight the highest-risk station in the sidebar without panning the map,
-    // so the initial view shows all of California.
-    if (STATIONS.length > 0) {
+    syncDashboardView();
+    loadDashboardData().then(() => {
+      syncDashboardView();
+      if (activeStation) {
+        setTimeout(() => {
+          const dot = document.getElementById(`dot-${activeStation}`);
+          if (dot) dot.classList.add('active');
+          renderList();
+        }, 600);
+      }
+    });
+    if (activeStation) {
       setTimeout(() => {
-        const s = STATIONS[0];
-        activeStation = s.id;
-        const dot = document.getElementById(`dot-${s.id}`);
+        const dot = document.getElementById(`dot-${activeStation}`);
         if (dot) dot.classList.add('active');
         renderList();
       }, 600);
