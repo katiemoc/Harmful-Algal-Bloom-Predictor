@@ -321,7 +321,6 @@ HTML_TEMPLATE = r"""
         <span class="toggle-label">Model:</span>
         <button class="toggle-btn active" id="btn-rf" onclick="setModel('rf')">Random Forest</button>
         <button class="toggle-btn" id="btn-xgb" onclick="setModel('xgb')">XGBoost</button>
-        <button class="toggle-btn" id="btn-both" onclick="setModel('both')">Both</button>
       </div>
 
       <!-- Filter tabs -->
@@ -512,18 +511,6 @@ HTML_TEMPLATE = r"""
         const cls = riskClass(prob, thr);
         const rfCls = riskClass(s.rf_probability, DATA.summary.rf_threshold);
         const xgbCls = riskClass(s.xgb_probability, DATA.summary.xgb_threshold);
-        const compareRow = activeModel === 'both' ? `
-          <div class="model-compare">
-            <div class="mc-item">
-              <div class="mc-label">Random Forest</div>
-              <div class="mc-val ${rfCls}">${(s.rf_probability*100).toFixed(1)}% · ${riskLabel(rfCls)}</div>
-            </div>
-            <div class="mc-item">
-              <div class="mc-label">XGBoost</div>
-              <div class="mc-val ${xgbCls}">${(s.xgb_probability*100).toFixed(1)}% · ${riskLabel(xgbCls)}</div>
-            </div>
-          </div>` : '';
-
         return `
           <div class="scard ${cls} ${activeStation === s.id ? 'active' : ''}" id="card-${s.id}" onclick="activateStation('${s.id}', true)">
             <div class="card-top">
@@ -542,7 +529,6 @@ HTML_TEMPLATE = r"""
               <div class="feat"><div class="feat-val">${s.wind}</div><div class="feat-label">Wind</div></div>
               <div class="feat"><div class="feat-val">${s.chloro}</div><div class="feat-label">Chloro</div></div>
             </div>
-            ${compareRow}
           </div>`;
       }).join('');
     }
@@ -584,33 +570,20 @@ HTML_TEMPLATE = r"""
     }
     function updatePerfPanel() {
       const metrics = activeModel === 'xgb' ? DATA.summary.xgb_metrics : DATA.summary.rf_metrics;
-      const title = activeModel === 'both' ? 'Model Comparison'
-                  : activeModel === 'xgb' ? 'XGBoost Performance'
-                  : 'Random Forest Performance';
+      const title = activeModel === 'xgb' ? 'XGBoost Performance' : 'Random Forest Performance';
       document.getElementById('model-perf-title').textContent = title;
 
-      if (activeModel !== 'both') {
-        document.getElementById('model-perf-metrics').innerHTML = `
-          <div class="mp-metric"><div class="mp-val">${metrics.roc_auc.toFixed(2)}</div><div class="mp-label">AUC-ROC</div></div>
-          <div class="mp-metric"><div class="mp-val">${metrics.f1.toFixed(2)}</div><div class="mp-label">F1</div></div>
-          <div class="mp-metric"><div class="mp-val">${metrics.recall.toFixed(2)}</div><div class="mp-label">Recall</div></div>
-          <div class="mp-metric"><div class="mp-val">${metrics.precision.toFixed(2)}</div><div class="mp-label">Precision</div></div>`;
-        return;
-      }
-
-      const rf = DATA.summary.rf_metrics;
-      const xgb = DATA.summary.xgb_metrics;
       document.getElementById('model-perf-metrics').innerHTML = `
-        <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.roc_auc.toFixed(2)}<br>XGB ${xgb.roc_auc.toFixed(2)}</div><div class="mp-label">AUC-ROC</div></div>
-        <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.f1.toFixed(2)}<br>XGB ${xgb.f1.toFixed(2)}</div><div class="mp-label">F1</div></div>
-        <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.recall.toFixed(2)}<br>XGB ${xgb.recall.toFixed(2)}</div><div class="mp-label">Recall</div></div>
-        <div class="mp-metric"><div class="mp-val" style="font-size:10px">RF ${rf.precision.toFixed(2)}<br>XGB ${xgb.precision.toFixed(2)}</div><div class="mp-label">Precision</div></div>`;
+        <div class="mp-metric"><div class="mp-val">${metrics.roc_auc.toFixed(2)}</div><div class="mp-label">AUC-ROC</div></div>
+        <div class="mp-metric"><div class="mp-val">${metrics.f1.toFixed(2)}</div><div class="mp-label">F1</div></div>
+        <div class="mp-metric"><div class="mp-val">${metrics.recall.toFixed(2)}</div><div class="mp-label">Recall</div></div>
+        <div class="mp-metric"><div class="mp-val">${metrics.precision.toFixed(2)}</div><div class="mp-label">Precision</div></div>`;
     }
 
     // ── MODEL SWITCH ──
     function setModel(model) {
       activeModel = model;
-      ['rf','xgb','both'].forEach(m => {
+      ['rf','xgb'].forEach(m => {
         document.getElementById(`btn-${m}`).classList.toggle('active', m === model);
       });
 
