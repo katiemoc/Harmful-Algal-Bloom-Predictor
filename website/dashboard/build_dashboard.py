@@ -11,9 +11,11 @@ from jinja2 import Template
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
     balanced_accuracy_score,
+    brier_score_loss,
     confusion_matrix,
     f1_score,
     precision_recall_curve,
@@ -683,6 +685,7 @@ def compute_metrics(y_true, y_pred, y_proba) -> dict:
         "threshold": float(y_proba.mean()),  # placeholder, overwritten below
         "accuracy": float(accuracy_score(y_true, y_pred)),
         "balanced_accuracy": float(balanced_accuracy_score(y_true, y_pred)),
+        "brier_score": float(brier_score_loss(y_true, y_proba)),
         "f1": float(f1_score(y_true, y_pred, zero_division=0)),
         "recall": float(recall_score(y_true, y_pred, zero_division=0)),
         "precision": float(precision_score(y_true, y_pred, zero_division=0)),
@@ -702,6 +705,25 @@ def find_threshold(y_true, y_proba) -> float:
     # replaced with something semantically meaningful.
     floor = float(np.mean(y_proba[y_true == 1])) if (y_true == 1).any() else 0.2
     return max(best, floor)
+
+
+class ProbabilityCalibrator:
+    """Map raw model scores to validation-calibrated HAB risk estimates."""
+
+    def __init__(self) -> None:
+        self.model = LogisticRegression(random_state=42)
+
+    @staticmethod
+    def _log_odds(probabilities) -> np.ndarray:
+        clipped = np.clip(np.asarray(probabilities, dtype=float), 1e-6, 1 - 1e-6)
+        return np.log(clipped / (1 - clipped)).reshape(-1, 1)
+
+    def fit(self, probabilities, labels) -> "ProbabilityCalibrator":
+        self.model.fit(self._log_odds(probabilities), labels)
+        return self
+
+    def predict(self, probabilities) -> np.ndarray:
+        return self.model.predict_proba(self._log_odds(probabilities))[:, 1]
 
 
 def build_preprocessor(numeric: list[str], categorical: list[str]):
@@ -745,7 +767,8 @@ def build_models(df: pd.DataFrame):
         )),
     ])
     rf_pipe.fit(x_train, y_train)
-    rf_proba_val = rf_pipe.predict_proba(x_val)[:, 1]
+    rf_calibrator = ProbabilityCalibrator().fit(rf_pipe.predict_proba(x_val)[:, 1], y_val)
+    rf_proba_val = rf_calibrator.predict(rf_pipe.predict_proba(x_val)[:, 1])
     rf_threshold = find_threshold(y_val, rf_proba_val)
     rf_pred_val = (rf_proba_val >= rf_threshold).astype(int)
     rf_metrics = compute_metrics(y_val, rf_pred_val, rf_proba_val)
@@ -768,13 +791,14 @@ def build_models(df: pd.DataFrame):
         )),
     ])
     xgb_pipe.fit(x_train, y_train)
-    xgb_proba_val = xgb_pipe.predict_proba(x_val)[:, 1]
+    xgb_calibrator = ProbabilityCalibrator().fit(xgb_pipe.predict_proba(x_val)[:, 1], y_val)
+    xgb_proba_val = xgb_calibrator.predict(xgb_pipe.predict_proba(x_val)[:, 1])
     xgb_threshold = find_threshold(y_val, xgb_proba_val)
     xgb_pred_val = (xgb_proba_val >= xgb_threshold).astype(int)
     xgb_metrics = compute_metrics(y_val, xgb_pred_val, xgb_proba_val)
     xgb_metrics["threshold"] = xgb_threshold
 
-    return rf_pipe, xgb_pipe, features, rf_metrics, xgb_metrics
+    return rf_pipe, xgb_pipe, rf_calibrator, xgb_calibrator, features, rf_metrics, xgb_metrics
 
 
 def _load_env(path: Path) -> None:
@@ -796,8 +820,11 @@ def fetch_model_feed_from_supabase() -> pd.DataFrame | None:
     supabase_key = os.environ.get("SUPABASE_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     if not supabase_url or not supabase_key:
         return None
+    base_url = supabase_url.rstrip("/")
+    if base_url.endswith("/rest/v1"):
+        base_url = base_url.removesuffix("/rest/v1")
     endpoint = (
-        f"{supabase_url.rstrip('/')}/rest/v1/hab_model_feed"
+        f"{base_url}/rest/v1/hab_model_feed"
         "?select=*&order=week_start.desc&limit=10000"
     )
     req = urllib.request.Request(
@@ -837,7 +864,7 @@ def build_dashboard() -> None:
     df = pd.read_csv(data_path, parse_dates=["week_start", "sample_date"])
     df["station_id"] = df["station_id"].astype(str)
 
-    rf_model, xgb_model, features, rf_metrics, xgb_metrics = build_models(df)
+    rf_model, xgb_model, rf_calibrator, xgb_calibrator, features, rf_metrics, xgb_metrics = build_models(df)
 
     # Use live Supabase feed for predictions; fall back to tail of training data
     feed_df = fetch_model_feed_from_supabase()
@@ -857,8 +884,8 @@ def build_dashboard() -> None:
     )
 
     available_features = [f for f in features if f in latest.columns]
-    rf_probas  = rf_model.predict_proba(latest[available_features])[:, 1]
-    xgb_probas = xgb_model.predict_proba(latest[available_features])[:, 1]
+    rf_probas = rf_calibrator.predict(rf_model.predict_proba(latest[available_features])[:, 1])
+    xgb_probas = xgb_calibrator.predict(xgb_model.predict_proba(latest[available_features])[:, 1])
     latest["rf_probability"]  = rf_probas
     latest["xgb_probability"] = xgb_probas
 
@@ -897,6 +924,7 @@ def build_dashboard() -> None:
         "latest_update": latest["week_start"].max().date().isoformat(),
         "rf_threshold": rf_thr,
         "xgb_threshold": xgb_thr,
+        "probability_calibration": "sigmoid_log_odds_validation",
         "rf_metrics": rf_metrics,
         "xgb_metrics": xgb_metrics,
     }
