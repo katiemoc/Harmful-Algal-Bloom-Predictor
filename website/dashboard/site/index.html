@@ -217,10 +217,10 @@
     <span class="topbar-logo">HAB Predictor</span>
     <span class="topbar-sub">California Coastal Risk Dashboard</span>
     <div class="topbar-right">
-     <span class="topbar-update" id="topbar-update">Latest available dataset week: 2026-05-18</span>
+     <span class="topbar-update" id="topbar-update">Latest available dataset week: 2026-05-25</span>
       <div class="topbar-alert">
         <div class="alert-dot"></div>
-        <span id="topbar-alert-text">3 HIGH-RISK ESTIMATES</span>
+        <span id="topbar-alert-text">4 HIGH-RISK ESTIMATES</span>
       </div>
     </div>
   </header>
@@ -230,7 +230,7 @@
     <div style="position:relative;flex:1;height:100%;">
       <div id="map"></div>
       <div class="map-overlay">
-        <div class="map-chip" id="map-chip">11 CalHABMAP-linked station locations</div>
+        <div class="map-chip" id="map-chip">12 CalHABMAP-linked station locations</div>
         <div class="map-legend">
           <div class="legend-row"><div class="l-dot high"></div>High risk</div>
           <div class="legend-row"><div class="l-dot medium"></div>Elevated</div>
@@ -245,11 +245,11 @@
       <!-- Metrics -->
       <div class="metrics-strip">
         <div class="metric-cell">
-          <div class="metric-val" id="metric-stations">11</div>
+          <div class="metric-val" id="metric-stations">12</div>
           <div class="metric-label">stations<br>monitored</div>
         </div>
         <div class="metric-cell">
-          <div class="metric-val danger" id="metric-high">3</div>
+          <div class="metric-val danger" id="metric-high">4</div>
           <div class="metric-label">high-risk<br>estimates</div>
         </div>
         <div class="metric-cell">
@@ -271,8 +271,8 @@
 
       <!-- Filter tabs -->
       <div class="filter-bar">
-        <button class="filter-tab active" onclick="filterStations('all',this)">All<span class="fcnt" id="cnt-all">11</span></button>
-        <button class="filter-tab f-high" onclick="filterStations('high',this)">High<span class="fcnt" id="cnt-high">3</span></button>
+        <button class="filter-tab active" onclick="filterStations('all',this)">All<span class="fcnt" id="cnt-all">12</span></button>
+        <button class="filter-tab f-high" onclick="filterStations('high',this)">High<span class="fcnt" id="cnt-high">4</span></button>
         <button class="filter-tab f-medium" onclick="filterStations('medium',this)">Elevated<span class="fcnt" id="cnt-med">4</span></button>
         <button class="filter-tab" onclick="filterStations('low',this)">Low<span class="fcnt" id="cnt-low">4</span></button>
       </div>
@@ -288,9 +288,9 @@
         </div>
         <div class="mp-metrics" id="model-perf-metrics">
           <div class="mp-metric"><div class="mp-val">0.86</div><div class="mp-label">AUC-ROC</div></div>
-          <div class="mp-metric"><div class="mp-val">0.51</div><div class="mp-label">F1</div></div>
-          <div class="mp-metric"><div class="mp-val">0.53</div><div class="mp-label">Recall</div></div>
-          <div class="mp-metric"><div class="mp-val">0.50</div><div class="mp-label">Precision</div></div>
+          <div class="mp-metric"><div class="mp-val">0.50</div><div class="mp-label">F1</div></div>
+          <div class="mp-metric"><div class="mp-val">0.51</div><div class="mp-label">Recall</div></div>
+          <div class="mp-metric"><div class="mp-val">0.49</div><div class="mp-label">Precision</div></div>
         </div>
       </div>
 
@@ -302,7 +302,7 @@
     </aside>
   </div>
 
-  <script type="application/json" id="dashboard-data">{"summary": {"station_count": 11, "high_count": 3, "medium_count": 4, "low_count": 4, "latest_update": "2026-05-18", "rf_threshold": 0.3727702857506314, "xgb_threshold": 0.32744894886144565, "probability_calibration": "sigmoid_log_odds_validation", "rf_metrics": {"threshold": 0.3727702857506314, "accuracy": 0.8167202572347267, "balanced_accuracy": 0.7041027766266059, "brier_score": 0.11692599157550707, "f1": 0.5128205128205128, "recall": 0.5263157894736842, "precision": 0.5, "roc_auc": 0.8613068103329189, "confusion_matrix": [[224, 30], [27, 30]]}, "xgb_metrics": {"threshold": 0.32744894886144565, "accuracy": 0.7813504823151125, "balanced_accuracy": 0.6348252521066445, "brier_score": 0.1272099450462479, "f1": 0.40350877192982454, "recall": 0.40350877192982454, "precision": 0.40350877192982454, "roc_auc": 0.8374084818345074, "confusion_matrix": [[220, 34], [34, 23]]}}, "stations": [{"id": "bodega-marine-lab", "station": "Bodega Marine Lab", "week_start": "2026-04-13", "station_id": "NDBC-46013", "latitude": 38.31613, "longitude": -123.0705, "rf_probability": 0.5435, "xgb_probability": 0.2308, "rf_risk_class": "high", "sst": "12.7 C", "ndbc_sst": "n/a", "wind": "7.0 m/s", "chloro": "n/a"}, {"id": "cal-poly-pier", "station": "Cal Poly Pier", "week_start": "2026-05-11", "station_id": "NDBC-46011", "latitude": 35.170204, "longitude": -120.740685, "rf_probability": 0.4118, "xgb_probability": 0.3103, "rf_risk_class": "high", "sst": "13.2 C", "ndbc_sst": "14.4 C", "wind": "9.0 m/s", "chloro": "3.6"}, {"id": "trinidad-pier", "station": "Trinidad Pier", "week_start": "2026-02-02", "station_id": "NDBC-46022", "latitude": 41.05495, "longitude": -124.14696, "rf_probability": 0.3958, "xgb_probability": 0.1552, "rf_risk_class": "high", "sst": "12.0 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "n/a"}, {"id": "bodega-marine-lab-buoy", "station": "Bodega Marine Lab Buoy", "week_start": "2026-01-26", "station_id": "NDBC-46013", "latitude": 38.3126, "longitude": -123.0825, "rf_probability": 0.3486, "xgb_probability": 0.1786, "rf_risk_class": "medium", "sst": "12.9 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "n/a"}, {"id": "humboldt", "station": "Humboldt", "week_start": "2026-01-12", "station_id": "NDBC-46022", "latitude": 40.77833, "longitude": -124.1967, "rf_probability": 0.3434, "xgb_probability": 0.0921, "rf_risk_class": "medium", "sst": "11.8 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "n/a"}, {"id": "monterey-wharf", "station": "Monterey Wharf", "week_start": "2026-05-18", "station_id": "NDBC-46042", "latitude": 36.603683, "longitude": -121.889275, "rf_probability": 0.343, "xgb_probability": 0.3373, "rf_risk_class": "medium", "sst": "n/a", "ndbc_sst": "11.6 C", "wind": "5.0 m/s", "chloro": "n/a"}, {"id": "santa-cruz-wharf", "station": "Santa Cruz Wharf", "week_start": "2026-05-18", "station_id": "NDBC-46042", "latitude": 36.958, "longitude": -122.017, "rf_probability": 0.317, "xgb_probability": 0.3942, "rf_risk_class": "medium", "sst": "n/a", "ndbc_sst": "11.6 C", "wind": "5.0 m/s", "chloro": "9.9"}, {"id": "stearns-wharf", "station": "Stearns Wharf", "week_start": "2026-03-30", "station_id": "NDBC-46053", "latitude": 34.408043, "longitude": -119.68485, "rf_probability": 0.1793, "xgb_probability": 0.2258, "rf_risk_class": "low", "sst": "16.7 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "n/a"}, {"id": "newport-beach-pier", "station": "Newport Beach Pier", "week_start": "2026-04-27", "station_id": "NDBC-46025", "latitude": 33.6061, "longitude": -117.9311, "rf_probability": 0.1062, "xgb_probability": 0.2154, "rf_risk_class": "low", "sst": "18.1 C", "ndbc_sst": "17.1 C", "wind": "3.0 m/s", "chloro": "3.0"}, {"id": "santa-monica-pier", "station": "Santa Monica Pier", "week_start": "2026-05-18", "station_id": "NDBC-46025", "latitude": 34.008, "longitude": -118.499, "rf_probability": 0.0922, "xgb_probability": 0.1115, "rf_risk_class": "low", "sst": "n/a", "ndbc_sst": "17.6 C", "wind": "3.0 m/s", "chloro": "n/a"}, {"id": "scripps-pier", "station": "Scripps Pier", "week_start": "2026-05-11", "station_id": "NDBC-46086", "latitude": 32.867, "longitude": -117.257, "rf_probability": 0.0356, "xgb_probability": 0.1322, "rf_risk_class": "low", "sst": "18.3 C", "ndbc_sst": "19.0 C", "wind": "3.0 m/s", "chloro": "2.0"}]}</script>
+  <script type="application/json" id="dashboard-data">{"summary": {"station_count": 12, "high_count": 4, "medium_count": 4, "low_count": 4, "latest_update": "2026-05-25", "rf_threshold": 0.3723800378586912, "xgb_threshold": 0.3258851809362387, "probability_calibration": "sigmoid_log_odds_validation", "rf_metrics": {"threshold": 0.3723800378586912, "accuracy": 0.8135048231511254, "balanced_accuracy": 0.6953308468020445, "brier_score": 0.11700754079918657, "f1": 0.5, "recall": 0.5087719298245614, "precision": 0.4915254237288136, "roc_auc": 0.8613758806464982, "confusion_matrix": [[224, 30], [28, 29]]}, "xgb_metrics": {"threshold": 0.3258851809362387, "accuracy": 0.7877813504823151, "balanced_accuracy": 0.6455656858682138, "brier_score": 0.12757825035312176, "f1": 0.42105263157894735, "recall": 0.42105263157894735, "precision": 0.42105263157894735, "roc_auc": 0.8393424506147258, "confusion_matrix": [[221, 33], [33, 24]]}}, "stations": [{"id": "trinidad-pier", "station": "Trinidad Pier", "week_start": "2026-04-13", "station_id": "NDBC-46022", "latitude": 41.05495, "longitude": -124.14696, "rf_probability": 0.5872, "xgb_probability": 0.3857, "rf_risk_class": "high", "sst": "11.9 C", "ndbc_sst": "11.7 C", "wind": "4.0 m/s", "chloro": "n/a"}, {"id": "humboldt", "station": "Humboldt", "week_start": "2026-04-06", "station_id": "NDBC-46022", "latitude": 40.77833, "longitude": -124.1967, "rf_probability": 0.4973, "xgb_probability": 0.304, "rf_risk_class": "high", "sst": "11.5 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "n/a"}, {"id": "bodega-marine-lab", "station": "Bodega Marine Lab", "week_start": "2026-04-13", "station_id": "NDBC-46013", "latitude": 38.31613, "longitude": -123.0705, "rf_probability": 0.4469, "xgb_probability": 0.269, "rf_risk_class": "high", "sst": "12.7 C", "ndbc_sst": "n/a", "wind": "4.0 m/s", "chloro": "n/a"}, {"id": "cal-poly-pier", "station": "Cal Poly Pier", "week_start": "2026-05-18", "station_id": "NDBC-46011", "latitude": 35.170204, "longitude": -120.740685, "rf_probability": 0.444, "xgb_probability": 0.4448, "rf_risk_class": "high", "sst": "12.9 C", "ndbc_sst": "13.6 C", "wind": "3.0 m/s", "chloro": "4.7"}, {"id": "santa-cruz-wharf", "station": "Santa Cruz Wharf", "week_start": "2026-05-25", "station_id": "NDBC-46042", "latitude": 36.958, "longitude": -122.017, "rf_probability": 0.3507, "xgb_probability": 0.4482, "rf_risk_class": "medium", "sst": "n/a", "ndbc_sst": "14.2 C", "wind": "5.0 m/s", "chloro": "18.6"}, {"id": "bodega-marine-lab-buoy", "station": "Bodega Marine Lab Buoy", "week_start": "2026-01-26", "station_id": "NDBC-46013", "latitude": 38.3126, "longitude": -123.0825, "rf_probability": 0.3493, "xgb_probability": 0.266, "rf_risk_class": "medium", "sst": "12.9 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "n/a"}, {"id": "monterey-wharf", "station": "Monterey Wharf", "week_start": "2026-05-25", "station_id": "NDBC-46042", "latitude": 36.603683, "longitude": -121.889275, "rf_probability": 0.319, "xgb_probability": 0.3574, "rf_risk_class": "medium", "sst": "n/a", "ndbc_sst": "14.2 C", "wind": "5.0 m/s", "chloro": "n/a"}, {"id": "humboldt-south-bay", "station": "Humboldt South Bay", "week_start": "2026-03-30", "station_id": "NDBC-46022", "latitude": 40.72343, "longitude": -124.2234, "rf_probability": 0.2238, "xgb_probability": 0.1189, "rf_risk_class": "medium", "sst": "n/a", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "n/a"}, {"id": "stearns-wharf", "station": "Stearns Wharf", "week_start": "2026-03-30", "station_id": "NDBC-46053", "latitude": 34.408043, "longitude": -119.68485, "rf_probability": 0.1785, "xgb_probability": 0.1999, "rf_risk_class": "low", "sst": "16.7 C", "ndbc_sst": "n/a", "wind": "n/a", "chloro": "n/a"}, {"id": "santa-monica-pier", "station": "Santa Monica Pier", "week_start": "2026-05-25", "station_id": "NDBC-46025", "latitude": 34.008, "longitude": -118.499, "rf_probability": 0.093, "xgb_probability": 0.2186, "rf_risk_class": "low", "sst": "n/a", "ndbc_sst": "18.0 C", "wind": "4.0 m/s", "chloro": "n/a"}, {"id": "newport-beach-pier", "station": "Newport Beach Pier", "week_start": "2026-05-18", "station_id": "NDBC-46025", "latitude": 33.6061, "longitude": -117.9311, "rf_probability": 0.0897, "xgb_probability": 0.3004, "rf_risk_class": "low", "sst": "17.6 C", "ndbc_sst": "17.6 C", "wind": "3.0 m/s", "chloro": "1.6"}, {"id": "scripps-pier", "station": "Scripps Pier", "week_start": "2026-05-11", "station_id": "NDBC-46086", "latitude": 32.867, "longitude": -117.257, "rf_probability": 0.0275, "xgb_probability": 0.16, "rf_risk_class": "low", "sst": "18.7 C", "ndbc_sst": "19.0 C", "wind": "3.0 m/s", "chloro": "2.0"}]}</script>
   <script>
     const FALLBACK_DATA = JSON.parse(document.getElementById('dashboard-data').textContent);
     let DATA = FALLBACK_DATA;
